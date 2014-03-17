@@ -2,4 +2,4 @@ terminal-status
 ===============
 
 Atom terminal status
-![A screenshot of your spankin' package](https://f.cloud.github.com/assets/69169/2290250/c35d867a-a017-11e3-86be-cd7c5bf3ff9b.gif)
+![A screenshot of terminal-status package](http://guileen.github.io/img/terminal-status/screenshot-0.2.0.gif)

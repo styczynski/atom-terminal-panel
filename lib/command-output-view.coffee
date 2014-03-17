@@ -7,7 +7,7 @@ class CommandOutputView extends View
 
   @content: ->
     @div tabIndex: -1, class: 'cli-status tool-panel panel-bottom padded', =>
-      @div class: "terminal", outlet: "cliOutput",
+      @pre class: "terminal", outlet: "cliOutput",
         "Welcome to terminal status.http://github.com/guileen/terminal-status"
       @div class: 'editor-container', =>
         @subview 'cmdEditor', new EditorView(mini: true, placeholderText: 'input your command here')
