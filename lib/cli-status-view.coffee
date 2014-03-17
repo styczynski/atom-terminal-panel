@@ -9,12 +9,10 @@ class CliStatusView extends View
 
   initialize: (serializeState) ->
     # atom.workspaceView.command "cli-status:toggle", => @toggle()
-    console.log 'view init'
     @commandOutputView = new CommandOutputView
     @attach()
 
   attach: ->
-    console.log 'attaching'
     atom.workspaceView.statusBar.appendLeft(this)
   # Returns an object that can be retrieved when package is activated
   # serialize: ->
@@ -24,11 +22,9 @@ class CliStatusView extends View
     @detach()
 
   click: ->
-    console.log 'click'
     @commandOutputView.toggle()
 
   toggle: ->
-    console.log "CliStatusView was toggled!"
     if @hasParent()
       @detach()
     else

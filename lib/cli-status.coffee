@@ -4,7 +4,6 @@ module.exports =
   cliStatusView: null
 
   activate: (state) ->
-    console.log 'active'
     createStatusEntry = =>
       @cliStatusView = new CliStatusView(state.cliStatusViewState)
 
@@ -12,7 +11,6 @@ module.exports =
       createStatusEntry()
     else
       atom.packages.once 'activated', ->
-        console.log 'activated'
         createStatusEntry()
 
   deactivate: ->
