@@ -9,3 +9,10 @@ Atom terminal status
 * multiple terminal
 * colorful status icon
 * kill long live process
+
+## Hotkeys
+
+* `shift-enter` toggle current terminal
+* `command-shift-t` new terminal
+* `command-shift-j` next terminal
+* `command-shift-k` prev terminal
