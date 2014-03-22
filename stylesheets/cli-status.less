@@ -5,16 +5,36 @@
 @import "ui-variables";
 
 .cli-status {
-  &.tool-panel {
-    overflow-y: scroll;
-    max-height: 300px;
+  &.panel {
+    margin-bottom: 0px;
     white-space: pre;
     word-wrap: break-word;
-    font-size: @font-size;
+    font-size: 14px;
     font-family: monospace;
   }
+  .panel-heading {
+    // margin: 1px;
+    padding: 2px;
+    text-align: right;
+    .btn {
+      top: 0px;
+    }
+  }
   .terminal {
+    max-height: 300px;
+    overflow-y: scroll;
     bottom: @component-padding;
-    font-size: 12px;
+  }
+  .status-running {
+    color: hsl(180, 1, 0.5);
+  }
+  .status-info {
+    color: hsl(220, 1, 0.5);
+  }
+  .status-success {
+    color: hsl(100, 1, 0.5);
+  }
+  .status-error {
+    color: hsl(0, 1, 0.5);
   }
 }

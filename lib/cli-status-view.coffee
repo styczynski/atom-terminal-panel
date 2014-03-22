@@ -1,16 +1,29 @@
 {View} = require 'atom'
+domify = require 'domify'
 CommandOutputView = require './command-output-view'
 
 module.exports =
 class CliStatusView extends View
   @content: ->
     @div class: 'cli-status inline-block', =>
-      @span outlet: 'cliStatus', click: 'click', class: "cli-status icon icon-terminal"
+      @span outlet: 'termStatusContainer', =>
+      @span click: 'newTermClick', class: "cli-status icon icon-plus"
 
   initialize: (serializeState) ->
-    # atom.workspaceView.command "cli-status:toggle", => @toggle()
-    @commandOutputView = new CommandOutputView
+    @createTermStatus()
     @attach()
+
+  createTermStatus: ()->
+    termStatus = domify '<span class="cli-status icon icon-terminal"></span>'
+    commandOutputView = new CommandOutputView
+    commandOutputView.statusIcon = termStatus
+    termStatus.addEventListener 'click', () =>
+      commandOutputView.toggle()
+    @termStatusContainer.append termStatus
+    return commandOutputView
+
+  newTermClick: ()->
+    @createTermStatus().toggle()
 
   attach: ->
     atom.workspaceView.statusBar.appendLeft(this)
@@ -19,10 +32,8 @@ class CliStatusView extends View
 
   # Tear down any state and detach
   destroy: ->
+    # FIXME kill all opened programs
     @detach()
-
-  click: ->
-    @commandOutputView.toggle()
 
   toggle: ->
     if @hasParent()
