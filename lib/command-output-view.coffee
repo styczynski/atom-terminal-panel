@@ -14,9 +14,12 @@ class CommandOutputView extends View
       @div class: 'panel-heading', =>
         @div class: 'btn-group', =>
           @button outlet: 'killBtn', click: 'kill', class: 'btn hide', =>
-            @span class: "icon icon-x"
+            # @span class: "icon icon-x"
             @span 'kill'
           @button click: 'destroy', class: 'btn', =>
+            # @span class: "icon icon-x"
+            @span 'destroy'
+          @button click: 'close', class: 'btn', =>
             @span class: "icon icon-x"
             @span 'close'
       @div class: 'cli-panel-body', =>
@@ -86,14 +89,14 @@ class CommandOutputView extends View
     @timer = setTimeout onStatusOut, time
 
   destroy: ->
-    _destory = =>
+    _destroy = =>
       if @hasParent()
-        @detach()
-        lastOpenedView = null
+        @close()
       if @statusIcon and @statusIcon.parentNode
         @statusIcon.parentNode.removeChild(@statusIcon)
+      @statusView.removeCommandView this
     if @program
-      @program.once 'exit', _destory
+      @program.once 'exit', _destroy
       @program.kill()
     else
       _destory()
@@ -102,14 +105,21 @@ class CommandOutputView extends View
     if @program
       @program.kill()
 
+  open: ->
+    atom.workspaceView.prependToBottom(this) unless @hasParent()
+    if lastOpenedView and lastOpenedView != this
+      lastOpenedView.close()
+    lastOpenedView = this
+    @scrollToBottom()
+    @statusView.setActiveCommandView this
+    @cmdEditor.focus()
+
+  close: ->
+    @detach()
+    lastOpenedView = null
+
   toggle: ->
     if @hasParent()
-      @detach()
-      lastOpenedView = null
+      @close()
     else
-      atom.workspaceView.prependToBottom(this) unless @hasParent()
-      if lastOpenedView
-        lastOpenedView.toggle()
-      lastOpenedView = this
-      @scrollToBottom()
-      @cmdEditor.focus()
+      @open()

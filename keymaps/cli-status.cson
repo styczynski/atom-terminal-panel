@@ -8,4 +8,7 @@
 # For more detailed documentation see
 # https://atom.io/docs/latest/advanced/keymaps
 '.workspace':
-  'ctrl-alt-o': 'cli-status:toggle'
+  'shift-enter': 'terminal-status:toggle'
+  'cmd-shift-t': 'terminal-status:new'
+  'cmd-shift-j': 'terminal-status:next'
+  'cmd-shift-k': 'terminal-status:prev'
