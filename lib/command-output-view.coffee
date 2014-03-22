@@ -99,7 +99,7 @@ class CommandOutputView extends View
       @program.once 'exit', _destroy
       @program.kill()
     else
-      _destory()
+      _destroy()
 
   kill: ->
     if @program

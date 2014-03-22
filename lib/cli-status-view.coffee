@@ -41,7 +41,6 @@ class CliStatusView extends View
       index = 0
     if index < 0
       index = @commandViews.length - 1
-    console.log index
     @commandViews[index] and @commandViews[index].open()
 
   setActiveCommandView: (commandView) ->
