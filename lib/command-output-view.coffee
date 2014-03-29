@@ -59,6 +59,7 @@ class CommandOutputView extends View
     @cliOutput.scrollTop 10000000
 
   flashIconClass: (className, time=100)=>
+    console.log 'addClass', className
     addClass @statusIcon, className
     @timer and clearTimeout(@timer)
     onStatusOut = =>
@@ -196,12 +197,15 @@ class CommandOutputView extends View
       addClass @statusIcon, 'status-running'
       @killBtn.removeClass 'hide'
       @program.once 'exit', (code) =>
+        console.log 'exit', code
         @killBtn.addClass 'hide'
         removeClass @statusIcon, 'status-running'
+        # removeClass @statusIcon, 'status-error'
         @program = null
         addClass @statusIcon, code == 0 and 'status-success' or 'status-error'
         @showCmd()
       @program.on 'error', (err) =>
+        console.log 'error'
         @cliOutput.append err.message
         @showCmd()
         addClass @statusIcon, 'status-error'
@@ -209,7 +213,8 @@ class CommandOutputView extends View
         @flashIconClass 'status-info'
         removeClass @statusIcon, 'status-error'
       @program.stderr.on 'data', () =>
-        addClass @statusIcon, 'status-error'
+        console.log 'stderr'
+        @flashIconClass 'status-error', 500
 
     catch err
       @cliOutput.append err.message
