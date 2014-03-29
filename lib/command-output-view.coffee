@@ -36,47 +36,18 @@ class CommandOutputView extends View
 
     @on "core:confirm", =>
       inputCmd = @cmdEditor.getEditor().getText()
-      htmlStream = ansihtml()
-      @cmdEditor.hide()
       @cliOutput.append "\n$>#{inputCmd}\n"
-
-      htmlStream.on 'data', (data) =>
-        @cliOutput.append data
-        @scrollToBottom()
       args = []
       # support 'a b c' and "foo bar"
       inputCmd.replace /("[^"]*"|'[^']*'|[^\s'"]+)/g, (s) ->
         args.push s
       cmd = args.shift()
       if cmd == 'cd'
-        @cd args
-      try
-        @program = spawn cmd, args, stdio: 'pipe', env: process.env, cwd: @cwd
-        @program.stdout.pipe htmlStream
-        @program.stderr.pipe htmlStream
-        removeClass @statusIcon, 'status-success'
-        removeClass @statusIcon, 'status-error'
-        addClass @statusIcon, 'status-running'
-        @killBtn.removeClass 'hide'
-        @program.once 'exit', (code) =>
-          @killBtn.addClass 'hide'
-          removeClass @statusIcon, 'status-running'
-          @program = null
-          addClass @statusIcon, code == 0 and 'status-success' or 'status-error'
-          @showCmd()
-        @program.on 'error', (err) =>
-          @cliOutput.append err.message
-          @showCmd()
-          addClass @statusIcon, 'status-error'
-        @program.stdout.on 'data', () =>
-          @flashIconClass 'status-info'
-          removeClass @statusIcon, 'status-error'
-        @program.stderr.on 'data', () =>
-          addClass @statusIcon, 'status-error'
+        return @cd args
+      if cmd == 'ls'
+        return @ls args
+      @spawn cmd, args
 
-      catch err
-        @cliOutput.append err.message
-        @showCmd()
 
   showCmd: ->
     @cmdEditor.show()
@@ -133,12 +104,94 @@ class CommandOutputView extends View
   cd: (args)->
     dir = resolve @cwd, args[0]
     fs.stat dir, (err, stat) =>
-      @showCmd()
       if err
         if err.code == 'ENOENT'
-          return @cliOutput.append "cd: #{args[0]}: No such file or directory"
-        return @cliOutput.append err.message
+          return @message "cd: #{args[0]}: No such file or directory"
+        return @message err.message
       if not stat.isDirectory()
-        return @cliOutput.append "cd: not a directory: #{args[0]}"
+        return @message "cd: not a directory: #{args[0]}"
       @cwd = dir
-      @cliOutput.append "cwd: #{@cwd}"
+      @message "cwd: #{@cwd}"
+
+  ls: (args)->
+    files = fs.readdirSync @cwd
+    filesBlocks = []
+    files.forEach (filename) =>
+      filesBlocks.push @_fileInfoHtml(filename, @cwd)
+    @message filesBlocks.join('')
+
+  _fileInfoHtml: (filename, parent)->
+    classes = ['icon', 'file-info']
+    filepath = parent + '/' + filename
+    stat = fs.lstatSync filepath
+    if stat.isFile()
+      if stat.mode & 73 #0111
+        classes.push 'stat-program'
+      # TODO check extension
+      classes.push 'icon-file-text'
+    if stat.isDirectory()
+      classes.push 'icon-file-directory'
+    if stat.isSymbolicLink()
+      classes.push 'icon-file-symlink-file'
+      classes.push 'stat-link'
+    if stat.isCharacterDevice()
+      classes.push 'stat-char-dev'
+    if stat.isFIFO()
+      classes.push 'stat-fifo'
+    if stat.isSocket()
+      classes.push 'stat-sock'
+    if filename[0] == '.'
+      classes.push 'status-ignored'
+    # if statusName = @getGitStatusName filepath
+    #   classes.push statusName
+    # other stat info
+    "<span class=\"#{classes.join ' '}\">#{filename}</span>"
+
+  getGitStatusName: (path, gitRoot, repo) ->
+    status = (repo.getCachedPathStatus or repo.getPathStatus)(path)
+    console.log 'path status', path, status
+    if status
+      if repo.isStatusModified status
+        return 'modified'
+      if repo.isStatusNew status
+        return 'added'
+    if repo.isPathIgnore path
+      return 'ignored'
+
+  message: (message) ->
+      @cliOutput.append message
+      @showCmd()
+
+  spawn: (cmd, args) ->
+    @cmdEditor.hide()
+    htmlStream = ansihtml()
+    htmlStream.on 'data', (data) =>
+      @cliOutput.append data
+      @scrollToBottom()
+    try
+      @program = spawn cmd, args, stdio: 'pipe', env: process.env, cwd: @cwd
+      @program.stdout.pipe htmlStream
+      @program.stderr.pipe htmlStream
+      removeClass @statusIcon, 'status-success'
+      removeClass @statusIcon, 'status-error'
+      addClass @statusIcon, 'status-running'
+      @killBtn.removeClass 'hide'
+      @program.once 'exit', (code) =>
+        @killBtn.addClass 'hide'
+        removeClass @statusIcon, 'status-running'
+        @program = null
+        addClass @statusIcon, code == 0 and 'status-success' or 'status-error'
+        @showCmd()
+      @program.on 'error', (err) =>
+        @cliOutput.append err.message
+        @showCmd()
+        addClass @statusIcon, 'status-error'
+      @program.stdout.on 'data', () =>
+        @flashIconClass 'status-info'
+        removeClass @statusIcon, 'status-error'
+      @program.stderr.on 'data', () =>
+        addClass @statusIcon, 'status-error'
+
+    catch err
+      @cliOutput.append err.message
+      @showCmd()
