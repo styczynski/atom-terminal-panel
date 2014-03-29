@@ -106,10 +106,10 @@ class CommandOutputView extends View
     fs.stat dir, (err, stat) =>
       if err
         if err.code == 'ENOENT'
-          return @message "cd: #{args[0]}: No such file or directory"
-        return @message err.message
+          return @errorMessage "cd: #{args[0]}: No such file or directory"
+        return @errorMessage err.message
       if not stat.isDirectory()
-        return @message "cd: not a directory: #{args[0]}"
+        return @errorMessage "cd: not a directory: #{args[0]}"
       @cwd = dir
       @message "cwd: #{@cwd}"
 
@@ -118,12 +118,26 @@ class CommandOutputView extends View
     filesBlocks = []
     files.forEach (filename) =>
       filesBlocks.push @_fileInfoHtml(filename, @cwd)
-    @message filesBlocks.join('')
+    filesBlocks = filesBlocks.sort (a, b)->
+      aDir = a[1].isDirectory()
+      bDir = b[1].isDirectory()
+      if aDir and not bDir
+        return -1
+      if not aDir and bDir
+        return 1
+      a[2] > b[2] and 1 or -1
+    filesBlocks = filesBlocks.map (b) ->
+      b[0]
+    @message filesBlocks.join('') + '<div class="clear"/>'
 
   _fileInfoHtml: (filename, parent)->
     classes = ['icon', 'file-info']
     filepath = parent + '/' + filename
     stat = fs.lstatSync filepath
+    if stat.isSymbolicLink()
+      # classes.push 'icon-file-symlink-file'
+      classes.push 'stat-link'
+      stat = fs.statSync filepath
     if stat.isFile()
       if stat.mode & 73 #0111
         classes.push 'stat-program'
@@ -131,9 +145,6 @@ class CommandOutputView extends View
       classes.push 'icon-file-text'
     if stat.isDirectory()
       classes.push 'icon-file-directory'
-    if stat.isSymbolicLink()
-      classes.push 'icon-file-symlink-file'
-      classes.push 'stat-link'
     if stat.isCharacterDevice()
       classes.push 'stat-char-dev'
     if stat.isFIFO()
@@ -145,7 +156,7 @@ class CommandOutputView extends View
     # if statusName = @getGitStatusName filepath
     #   classes.push statusName
     # other stat info
-    "<span class=\"#{classes.join ' '}\">#{filename}</span>"
+    ["<span class=\"#{classes.join ' '}\">#{filename}</span>", stat, filename]
 
   getGitStatusName: (path, gitRoot, repo) ->
     status = (repo.getCachedPathStatus or repo.getPathStatus)(path)
@@ -159,8 +170,16 @@ class CommandOutputView extends View
       return 'ignored'
 
   message: (message) ->
-      @cliOutput.append message
-      @showCmd()
+    @cliOutput.append message
+    @showCmd()
+    removeClass @statusIcon, 'status-error'
+    addClass @statusIcon, 'status-success'
+
+  errorMessage: (message) ->
+    @cliOutput.append err.message
+    @showCmd()
+    removeClass @statusIcon, 'status-success'
+    addClass @statusIcon, 'status-error'
 
   spawn: (cmd, args) ->
     @cmdEditor.hide()

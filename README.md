@@ -9,6 +9,7 @@ Atom terminal status
 * multiple terminal
 * colorful status icon
 * kill long live process
+* fancy ls
 
 ## Hotkeys
 
