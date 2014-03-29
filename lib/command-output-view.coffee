@@ -3,6 +3,8 @@
 ansihtml = require 'ansi-html-stream'
 readline = require 'readline'
 {addClass, removeClass} = require 'domutil'
+{resolve} = require 'path'
+fs = require 'fs'
 
 lastOpenedView = null
 
@@ -28,6 +30,7 @@ class CommandOutputView extends View
         @subview 'cmdEditor', new EditorView(mini: true, placeholderText: 'input your command here')
 
   initialize: ->
+    @cwd = atom.project.path
     atom.workspaceView.command "cli-status:toggle-output", =>
       @toggle()
 
@@ -36,11 +39,6 @@ class CommandOutputView extends View
       htmlStream = ansihtml()
       @cmdEditor.hide()
       @cliOutput.append "\n$>#{inputCmd}\n"
-      showCmd = =>
-        @cmdEditor.show()
-        @cmdEditor.getEditor().selectAll()
-        @cmdEditor.focus()
-        @scrollToBottom()
 
       htmlStream.on 'data', (data) =>
         @cliOutput.append data
@@ -50,8 +48,10 @@ class CommandOutputView extends View
       inputCmd.replace /("[^"]*"|'[^']*'|[^\s'"]+)/g, (s) ->
         args.push s
       cmd = args.shift()
+      if cmd == 'cd'
+        @cd args
       try
-        @program = spawn cmd, args, stdio: 'pipe', env: process.env, cwd: atom.project.path
+        @program = spawn cmd, args, stdio: 'pipe', env: process.env, cwd: @cwd
         @program.stdout.pipe htmlStream
         @program.stderr.pipe htmlStream
         removeClass @statusIcon, 'status-success'
@@ -63,10 +63,10 @@ class CommandOutputView extends View
           removeClass @statusIcon, 'status-running'
           @program = null
           addClass @statusIcon, code == 0 and 'status-success' or 'status-error'
-          showCmd()
+          @showCmd()
         @program.on 'error', (err) =>
           @cliOutput.append err.message
-          showCmd()
+          @showCmd()
           addClass @statusIcon, 'status-error'
         @program.stdout.on 'data', () =>
           @flashIconClass 'status-info'
@@ -76,7 +76,13 @@ class CommandOutputView extends View
 
       catch err
         @cliOutput.append err.message
-        showCmd()
+        @showCmd()
+
+  showCmd: ->
+    @cmdEditor.show()
+    @cmdEditor.getEditor().selectAll()
+    @cmdEditor.focus()
+    @scrollToBottom()
 
   scrollToBottom: ->
     @cliOutput.scrollTop 10000000
@@ -123,3 +129,16 @@ class CommandOutputView extends View
       @close()
     else
       @open()
+
+  cd: (args)->
+    dir = resolve @cwd, args[0]
+    fs.stat dir, (err, stat) =>
+      @showCmd()
+      if err
+        if err.code == 'ENOENT'
+          return @cliOutput.append "cd: #{args[0]}: No such file or directory"
+        return @cliOutput.append err.message
+      if not stat.isDirectory()
+        return @cliOutput.append "cd: not a directory: #{args[0]}"
+      @cwd = dir
+      @cliOutput.append "cwd: #{@cwd}"
