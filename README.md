@@ -7,9 +7,11 @@ Just press `shift-enter`
 ## Screenshot
 
 Open multiple terminal.
+
 ![A screenshot of terminal-status package](http://guileen.github.io/img/terminal-status/screenshot-1.1.0.gif)
 
-Fancy ls
+Fancy ls.
+
 ![A screenshot of terminal-status package](http://guileen.github.io/img/terminal-status/screenshot-ls.gif)
 
 ## Feature
