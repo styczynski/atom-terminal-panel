@@ -37,6 +37,7 @@ class CommandOutputView extends View
     @on "core:confirm", =>
       inputCmd = @cmdEditor.getEditor().getText()
       @cliOutput.append "\n$>#{inputCmd}\n"
+      @scrollToBottom()
       args = []
       # support 'a b c' and "foo bar"
       inputCmd.replace /("[^"]*"|'[^']*'|[^\s'"]+)/g, (s) ->
