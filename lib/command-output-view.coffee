@@ -10,7 +10,7 @@ lastOpenedView = null
 
 module.exports =
 class CommandOutputView extends View
-
+  cwd: null
   @content: ->
     @div tabIndex: -1, class: 'panel cli-status panel-bottom', =>
       @div class: 'panel-heading', =>
@@ -31,7 +31,6 @@ class CommandOutputView extends View
 
   initialize: ->
     @userHome = process.env.HOME or process.env.HOMEPATH or process.env.USERPROFILE;
-    @cwd = atom.project.path or @userHome
     atom.workspaceView.command "cli-status:toggle-output", =>
       @toggle()
 
@@ -104,7 +103,7 @@ class CommandOutputView extends View
       @open()
 
   cd: (args)->
-    dir = resolve @cwd, args[0]
+    dir = resolve @getCwd(), args[0]
     fs.stat dir, (err, stat) =>
       if err
         if err.code == 'ENOENT'
@@ -116,10 +115,10 @@ class CommandOutputView extends View
       @message "cwd: #{@cwd}"
 
   ls: (args)->
-    files = fs.readdirSync @cwd
+    files = fs.readdirSync @getCwd()
     filesBlocks = []
     files.forEach (filename) =>
-      filesBlocks.push @_fileInfoHtml(filename, @cwd)
+      filesBlocks.push @_fileInfoHtml(filename, @getCwd())
     filesBlocks = filesBlocks.sort (a, b)->
       aDir = a[1].isDirectory()
       bDir = b[1].isDirectory()
@@ -183,6 +182,9 @@ class CommandOutputView extends View
     removeClass @statusIcon, 'status-success'
     addClass @statusIcon, 'status-error'
 
+  getCwd: ()->
+    @cwd or atom.project.path or @userHome
+
   spawn: (cmd, args) ->
     @cmdEditor.hide()
     htmlStream = ansihtml()
@@ -190,7 +192,7 @@ class CommandOutputView extends View
       @cliOutput.append data
       @scrollToBottom()
     try
-      @program = spawn cmd, args, stdio: 'pipe', env: process.env, cwd: @cwd
+      @program = spawn cmd, args, stdio: 'pipe', env: process.env, cwd: @getCwd()
       @program.stdout.pipe htmlStream
       @program.stderr.pipe htmlStream
       removeClass @statusIcon, 'status-success'
