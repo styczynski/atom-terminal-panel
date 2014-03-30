@@ -30,7 +30,8 @@ class CommandOutputView extends View
         @subview 'cmdEditor', new EditorView(mini: true, placeholderText: 'input your command here')
 
   initialize: ->
-    @cwd = atom.project.path
+    @userHome = process.env.HOME or process.env.HOMEPATH or process.env.USERPROFILE;
+    @cwd = atom.project.path or @userHome
     atom.workspaceView.command "cli-status:toggle-output", =>
       @toggle()
 
@@ -177,7 +178,7 @@ class CommandOutputView extends View
     addClass @statusIcon, 'status-success'
 
   errorMessage: (message) ->
-    @cliOutput.append err.message
+    @cliOutput.append message
     @showCmd()
     removeClass @statusIcon, 'status-success'
     addClass @statusIcon, 'status-error'
@@ -214,7 +215,7 @@ class CommandOutputView extends View
         removeClass @statusIcon, 'status-error'
       @program.stderr.on 'data', () =>
         console.log 'stderr'
-        @flashIconClass 'status-error', 500
+        @flashIconClass 'status-error', 300
 
     catch err
       @cliOutput.append err.message
