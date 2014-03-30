@@ -1,15 +1,14 @@
 # See https://atom.io/docs/latest/creating-a-package#menus for more details
-'context-menu':
-  '.overlayer':
-      'Enable cli-status': 'cli-status:toggle'
-
 'menu': [
   {
     'label': 'Packages'
     'submenu': [
-      'label': 'cli-status'
+      'label': 'Terminal Status'
       'submenu': [
-        { 'label': 'Toggle', 'command': 'cli-status:toggle' }
+        { 'label': 'New', 'command': 'terminal-status:new' }
+        { 'label': 'Toggle', 'command': 'terminal-status:toggle' }
+        { 'label': 'Prev', 'command': 'terminal-status:prev' }
+        { 'label': 'Next', 'command': 'terminal-status:next' }
       ]
     ]
   }
