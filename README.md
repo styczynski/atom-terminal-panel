@@ -27,3 +27,9 @@ Fancy ls.
 * `command-shift-t` new terminal
 * `command-shift-j` next terminal
 * `command-shift-k` prev terminal
+
+## Changelog
+
+* 1.3.2
+  * fix PATH of /usr/local/bin
+  * support ~
