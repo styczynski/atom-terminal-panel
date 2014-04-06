@@ -40,7 +40,9 @@ class CommandOutputView extends View
       @scrollToBottom()
       args = []
       # support 'a b c' and "foo bar"
-      inputCmd.replace /("[^"]*"|'[^']*'|[^\s'"]+)/g, (s) ->
+      inputCmd.replace /("[^"]*"|'[^']*'|[^\s'"]+)/g, (s) =>
+        if s[0] != '"' and s[0] != "'"
+          s = s.replace /~/g, @userHome
         args.push s
       cmd = args.shift()
       if cmd == 'cd'
