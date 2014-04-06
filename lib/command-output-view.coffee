@@ -31,6 +31,8 @@ class CommandOutputView extends View
 
   initialize: ->
     @userHome = process.env.HOME or process.env.HOMEPATH or process.env.USERPROFILE;
+    #FIXME how to set ENV, settings? profile?
+    process.env.PATH = process.env.PATH + ':/usr/local/bin'
     atom.workspaceView.command "cli-status:toggle-output", =>
       @toggle()
 
