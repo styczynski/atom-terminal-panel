@@ -30,6 +30,9 @@ Fancy ls.
 
 ## Changelog
 
+* 1.3.3
+  * source ~/.profile and /etc/profile for environment variables.
+
 * 1.3.2
   * fix PATH of /usr/local/bin
   * support ~
