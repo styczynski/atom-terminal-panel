@@ -1,5 +1,5 @@
 {View, EditorView} = require 'atom'
-{spawn} = require 'child_process'
+{spawn, exec} = require 'child_process'
 ansihtml = require 'ansi-html-stream'
 readline = require 'readline'
 {addClass, removeClass} = require 'domutil'
@@ -31,8 +31,9 @@ class CommandOutputView extends View
 
   initialize: ->
     @userHome = process.env.HOME or process.env.HOMEPATH or process.env.USERPROFILE;
-    #FIXME how to set ENV, settings? profile?
-    process.env.PATH = process.env.PATH + ':/usr/local/bin'
+    cmd = 'test -e /etc/profile && source /etc/profile;test -e ~/.profile && source ~/.profile; node -pe "JSON.stringify(process.env)"'
+    exec cmd, (code, stdout, stderr) ->
+      process.env = JSON.parse(stdout)
     atom.workspaceView.command "cli-status:toggle-output", =>
       @toggle()
 
