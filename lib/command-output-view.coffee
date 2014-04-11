@@ -52,7 +52,7 @@ class CommandOutputView extends View
         return @cd args
       if cmd == 'ls'
         return @ls args
-      @spawn cmd, args
+      @spawn inputCmd, cmd, args
 
 
   showCmd: ->
@@ -191,14 +191,15 @@ class CommandOutputView extends View
   getCwd: ()->
     @cwd or atom.project.path or @userHome
 
-  spawn: (cmd, args) ->
+  spawn: (inputCmd, cmd, args) ->
     @cmdEditor.hide()
     htmlStream = ansihtml()
     htmlStream.on 'data', (data) =>
       @cliOutput.append data
       @scrollToBottom()
     try
-      @program = spawn cmd, args, stdio: 'pipe', env: process.env, cwd: @getCwd()
+      # @program = spawn cmd, args, stdio: 'pipe', env: process.env, cwd: @getCwd()
+      @program = exec inputCmd, stdio: 'pipe', env: process.env, cwd: @getCwd()
       @program.stdout.pipe htmlStream
       @program.stderr.pipe htmlStream
       removeClass @statusIcon, 'status-success'
