@@ -30,6 +30,8 @@ class CommandOutputView extends View
         @subview 'cmdEditor', new EditorView(mini: true, placeholderText: 'input your command here')
 
   initialize: ->
+    @subscribe atom.config.observe 'terminal-status.WindowHeight', => @adjustWindowHeight()
+
     @userHome = process.env.HOME or process.env.HOMEPATH or process.env.USERPROFILE;
     cmd = 'test -e /etc/profile && source /etc/profile;test -e ~/.profile && source ~/.profile; node -pe "JSON.stringify(process.env)"'
     exec cmd, (code, stdout, stderr) ->
@@ -54,6 +56,10 @@ class CommandOutputView extends View
         return @ls args
       @spawn inputCmd, cmd, args
 
+
+  adjustWindowHeight: ->
+    maxHeight = atom.config.get('terminal-status.WindowHeight')
+    @cliOutput.css("max-height", "#{maxHeight}px")
 
   showCmd: ->
     @cmdEditor.show()
