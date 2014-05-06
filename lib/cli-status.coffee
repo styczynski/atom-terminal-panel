@@ -18,3 +18,6 @@ module.exports =
 
   # serialize: ->
   #   cliStatusViewState: @cliStatusView.serialize()
+
+  configDefaults:
+    'WindowHeight': 300
