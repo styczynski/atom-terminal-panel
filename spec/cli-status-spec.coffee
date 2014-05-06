@@ -27,3 +27,12 @@ describe "CliStatus", ->
         expect(atom.workspaceView.find('.cli-status')).toExist()
         atom.workspaceView.trigger 'cli-status:toggle'
         expect(atom.workspaceView.find('.cli-status')).not.toExist()
+
+  describe "when cli-status is activated", ->
+    it "should have configuration set up with defaults"
+
+    waitsForPromise ->
+      activationPromise
+
+    runs ->
+        expect(atom.config.get('terminal-status.WindowHeight')).toBe(300)
