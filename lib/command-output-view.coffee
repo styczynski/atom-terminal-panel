@@ -90,6 +90,7 @@ class CommandOutputView extends View
       @program.kill()
 
   open: ->
+    @lastLocation = atom.workspace.getActivePane()
     atom.workspaceView.prependToBottom(this) unless @hasParent()
     if lastOpenedView and lastOpenedView != this
       lastOpenedView.close()
@@ -99,6 +100,7 @@ class CommandOutputView extends View
     @cmdEditor.focus()
 
   close: ->
+    @lastLocation.activate()
     @detach()
     lastOpenedView = null
 
