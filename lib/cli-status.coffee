@@ -21,3 +21,4 @@ module.exports =
 
   configDefaults:
     'WindowHeight': 300
+    'clearCommandInput': true

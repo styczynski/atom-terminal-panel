@@ -67,6 +67,7 @@ class CommandOutputView extends View
   showCmd: ->
     @cmdEditor.show()
     @cmdEditor.getEditor().selectAll()
+    @cmdEditor.setText('') if atom.config.get('terminal-status.clearCommandInput')
     @cmdEditor.focus()
     @scrollToBottom()
 
