@@ -16,6 +16,7 @@ class CliStatusView extends View
     atom.workspaceView.command 'terminal-status:toggle', => @toggle()
     atom.workspaceView.command 'terminal-status:next', => @activeNextCommandView()
     atom.workspaceView.command 'terminal-status:prev', => @activePrevCommandView()
+    atom.workspaceView.command 'terminal-status:destroy', => @destroyActiveTerm()
     @createCommandView()
     @attach()
 
@@ -55,8 +56,9 @@ class CliStatusView extends View
 
   attach: ->
     atom.workspaceView.statusBar.appendLeft(this)
-  # Returns an object that can be retrieved when package is activated
-  # serialize: ->
+
+  destroyActiveTerm: ->
+     @commandViews[@activeIndex]?.destroy()
 
   # Tear down any state and detach
   destroy: ->
