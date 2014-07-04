@@ -67,4 +67,5 @@ class CliStatusView extends View
     @detach()
 
   toggle: ->
-    @commandViews[@activeIndex] and @commandViews[@activeIndex].toggle()
+    @createCommandView() unless @commandViews[@activeIndex]?
+    @commandViews[@activeIndex].toggle()
