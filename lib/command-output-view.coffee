@@ -32,7 +32,7 @@ class CommandOutputView extends View
   initialize: ->
     @subscribe atom.config.observe 'terminal-status.WindowHeight', => @adjustWindowHeight()
 
-    @userHome = process.env.HOME or process.env.HOMEPATH or process.env.USERPROFILE;
+    @userHome = process.env.HOME or process.env.HOMEPATH or process.env.USERPROFILE
     cmd = 'test -e /etc/profile && source /etc/profile;test -e ~/.profile && source ~/.profile; node -pe "JSON.stringify(process.env)"'
     exec cmd, (code, stdout, stderr) ->
       process.env = JSON.parse(stdout)
@@ -116,7 +116,7 @@ class CommandOutputView extends View
     else
       @open()
 
-  cd: (args)->
+  cd: (args) ->
     dir = resolve @getCwd(), args[0]
     fs.stat dir, (err, stat) =>
       if err
@@ -128,12 +128,12 @@ class CommandOutputView extends View
       @cwd = dir
       @message "cwd: #{@cwd}"
 
-  ls: (args)->
+  ls: (args) ->
     files = fs.readdirSync @getCwd()
     filesBlocks = []
     files.forEach (filename) =>
       filesBlocks.push @_fileInfoHtml(filename, @getCwd())
-    filesBlocks = filesBlocks.sort (a, b)->
+    filesBlocks = filesBlocks.sort (a, b) ->
       aDir = a[1].isDirectory()
       bDir = b[1].isDirectory()
       if aDir and not bDir
@@ -145,7 +145,7 @@ class CommandOutputView extends View
       b[0]
     @message filesBlocks.join('') + '<div class="clear"/>'
 
-  _fileInfoHtml: (filename, parent)->
+  _fileInfoHtml: (filename, parent) ->
     classes = ['icon', 'file-info']
     filepath = parent + '/' + filename
     stat = fs.lstatSync filepath
@@ -196,7 +196,7 @@ class CommandOutputView extends View
     removeClass @statusIcon, 'status-success'
     addClass @statusIcon, 'status-error'
 
-  getCwd: ()->
+  getCwd: ->
     @cwd or atom.project.path or @userHome
 
   spawn: (inputCmd, cmd, args) ->
@@ -227,10 +227,10 @@ class CommandOutputView extends View
         @cliOutput.append err.message
         @showCmd()
         addClass @statusIcon, 'status-error'
-      @program.stdout.on 'data', () =>
+      @program.stdout.on 'data', =>
         @flashIconClass 'status-info'
         removeClass @statusIcon, 'status-error'
-      @program.stderr.on 'data', () =>
+      @program.stderr.on 'data', =>
         console.log 'stderr'
         @flashIconClass 'status-error', 300
 
