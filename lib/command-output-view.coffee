@@ -71,7 +71,6 @@ class CommandOutputView extends View
     @cliOutput.scrollTop 10000000
 
   flashIconClass: (className, time=100)=>
-    console.log 'addClass', className
     addClass @statusIcon, className
     @timer and clearTimeout(@timer)
     onStatusOut = =>
