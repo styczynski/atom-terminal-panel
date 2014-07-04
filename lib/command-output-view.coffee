@@ -178,7 +178,6 @@ class CommandOutputView extends View
 
   getGitStatusName: (path, gitRoot, repo) ->
     status = (repo.getCachedPathStatus or repo.getPathStatus)(path)
-    console.log 'path status', path, status
     if status
       if repo.isStatusModified status
         return 'modified'
@@ -218,7 +217,7 @@ class CommandOutputView extends View
       addClass @statusIcon, 'status-running'
       @killBtn.removeClass 'hide'
       @program.once 'exit', (code) =>
-        console.log 'exit', code
+        console.log 'exit', code if atom.config.get('terminal-status.logConsole')
         @killBtn.addClass 'hide'
         removeClass @statusIcon, 'status-running'
         # removeClass @statusIcon, 'status-error'
@@ -226,7 +225,7 @@ class CommandOutputView extends View
         addClass @statusIcon, code == 0 and 'status-success' or 'status-error'
         @showCmd()
       @program.on 'error', (err) =>
-        console.log 'error'
+        console.log 'error' if atom.config.get('terminal-status.logConsole')
         @cliOutput.append err.message
         @showCmd()
         addClass @statusIcon, 'status-error'
@@ -234,7 +233,7 @@ class CommandOutputView extends View
         @flashIconClass 'status-info'
         removeClass @statusIcon, 'status-error'
       @program.stderr.on 'data', =>
-        console.log 'stderr'
+        console.log 'stderr' if atom.config.get('terminal-status.logConsole')
         @flashIconClass 'status-error', 300
 
     catch err
