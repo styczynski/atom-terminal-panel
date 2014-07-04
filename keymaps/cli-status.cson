@@ -20,3 +20,7 @@
   'alt-shift-j': 'terminal-status:next'
   'alt-shift-k': 'terminal-status:prev'
   'alt-shift-x': 'terminal-status:destroy'
+
+'.cli-status':
+  'cmd-c': 'native!'
+  'ctrl-c': 'native!'
