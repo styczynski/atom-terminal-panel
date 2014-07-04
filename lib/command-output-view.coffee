@@ -54,8 +54,11 @@ class CommandOutputView extends View
         return @cd args
       if cmd == 'ls'
         return @ls args
+      if cmd == 'clear'
+        @cliOutput.empty()
+        @message '\n'
+        return @cmdEditor.setText ''
       @spawn inputCmd, cmd, args
-
 
   adjustWindowHeight: ->
     maxHeight = atom.config.get('terminal-status.WindowHeight')
