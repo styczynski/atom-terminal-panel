@@ -117,6 +117,7 @@ class CommandOutputView extends View
       @open()
 
   cd: (args)->
+    args = [atom.project.path] if not args[0]
     dir = resolve @getCwd(), args[0]
     fs.stat dir, (err, stat) =>
       if err
