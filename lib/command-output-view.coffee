@@ -29,7 +29,7 @@ class CommandOutputView extends View
         @subview 'cmdEditor', new EditorView(mini: true, placeholderText: 'input your command here')
 
   initialize: ->
-    @subscribe atom.config.observe 'terminal-status.WindowHeight', => @adjustWindowHeight()
+    @subscribe atom.config.observe 'terminal-panel.WindowHeight', => @adjustWindowHeight()
 
     @userHome = process.env.HOME or process.env.HOMEPATH or process.env.USERPROFILE
     cmd = 'test -e /etc/profile && source /etc/profile;test -e ~/.profile && source ~/.profile; node -pe "JSON.stringify(process.env)"'
@@ -62,13 +62,13 @@ class CommandOutputView extends View
       @spawn inputCmd, cmd, args
 
   adjustWindowHeight: ->
-    maxHeight = atom.config.get('terminal-status.WindowHeight')
+    maxHeight = atom.config.get('terminal-panel.WindowHeight')
     @cliOutput.css("max-height", "#{maxHeight}px")
 
   showCmd: ->
     @cmdEditor.show()
     @cmdEditor.getEditor().selectAll()
-    @cmdEditor.setText('') if atom.config.get('terminal-status.clearCommandInput')
+    @cmdEditor.setText('') if atom.config.get('terminal-panel.clearCommandInput')
     @cmdEditor.focus()
     @scrollToBottom()
 
@@ -219,7 +219,7 @@ class CommandOutputView extends View
       addClass @statusIcon, 'status-running'
       @killBtn.removeClass 'hide'
       @program.once 'exit', (code) =>
-        console.log 'exit', code if atom.config.get('terminal-status.logConsole')
+        console.log 'exit', code if atom.config.get('terminal-panel.logConsole')
         @killBtn.addClass 'hide'
         removeClass @statusIcon, 'status-running'
         # removeClass @statusIcon, 'status-error'
@@ -227,7 +227,7 @@ class CommandOutputView extends View
         addClass @statusIcon, code == 0 and 'status-success' or 'status-error'
         @showCmd()
       @program.on 'error', (err) =>
-        console.log 'error' if atom.config.get('terminal-status.logConsole')
+        console.log 'error' if atom.config.get('terminal-panel.logConsole')
         @cliOutput.append err.message
         @showCmd()
         addClass @statusIcon, 'status-error'
@@ -235,7 +235,7 @@ class CommandOutputView extends View
         @flashIconClass 'status-info'
         removeClass @statusIcon, 'status-error'
       @program.stderr.on 'data', =>
-        console.log 'stderr' if atom.config.get('terminal-status.logConsole')
+        console.log 'stderr' if atom.config.get('terminal-panel.logConsole')
         @flashIconClass 'status-error', 300
 
     catch err

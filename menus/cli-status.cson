@@ -5,10 +5,10 @@
     'submenu': [
       'label': 'Terminal Status'
       'submenu': [
-        { 'label': 'New', 'command': 'terminal-status:new' }
-        { 'label': 'Toggle', 'command': 'terminal-status:toggle' }
-        { 'label': 'Prev', 'command': 'terminal-status:prev' }
-        { 'label': 'Next', 'command': 'terminal-status:next' }
+        { 'label': 'New', 'command': 'terminal-panel:new' }
+        { 'label': 'Toggle', 'command': 'terminal-panel:toggle' }
+        { 'label': 'Prev', 'command': 'terminal-panel:prev' }
+        { 'label': 'Next', 'command': 'terminal-panel:next' }
       ]
     ]
   }

@@ -35,4 +35,4 @@ describe "CliStatus", ->
       activationPromise
 
     runs ->
-        expect(atom.config.get('terminal-status.WindowHeight')).toBe(300)
+        expect(atom.config.get('terminal-panel.WindowHeight')).toBe(300)
