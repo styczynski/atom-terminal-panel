@@ -32,10 +32,12 @@ class CommandOutputView extends View
   initialize: ->
     @subscribe atom.config.observe 'terminal-status.WindowHeight', => @adjustWindowHeight()
 
-    @userHome = process.env.HOME or process.env.HOMEPATH or process.env.USERPROFILE;
+    @userHome = process.env.HOME or process.env.HOMEPATH or process.env.USERPROFILE
     cmd = 'test -e /etc/profile && source /etc/profile;test -e ~/.profile && source ~/.profile; node -pe "JSON.stringify(process.env)"'
     exec cmd, (code, stdout, stderr) ->
-      process.env = JSON.parse(stdout)
+      try
+        process.env = JSON.parse(stdout)
+      catch e
     atom.workspaceView.command "cli-status:toggle-output", =>
       @toggle()
 
@@ -54,8 +56,11 @@ class CommandOutputView extends View
         return @cd args
       if cmd == 'ls'
         return @ls args
+      if cmd == 'clear'
+        @cliOutput.empty()
+        @message '\n'
+        return @cmdEditor.setText ''
       @spawn inputCmd, cmd, args
-
 
   adjustWindowHeight: ->
     maxHeight = atom.config.get('terminal-status.WindowHeight')
@@ -64,6 +69,7 @@ class CommandOutputView extends View
   showCmd: ->
     @cmdEditor.show()
     @cmdEditor.getEditor().selectAll()
+    @cmdEditor.setText('') if atom.config.get('terminal-status.clearCommandInput')
     @cmdEditor.focus()
     @scrollToBottom()
 
@@ -71,7 +77,6 @@ class CommandOutputView extends View
     @cliOutput.scrollTop 10000000
 
   flashIconClass: (className, time=100)=>
-    console.log 'addClass', className
     addClass @statusIcon, className
     @timer and clearTimeout(@timer)
     onStatusOut = =>
@@ -129,12 +134,12 @@ class CommandOutputView extends View
       @cwd = dir
       @message "cwd: #{@cwd}"
 
-  ls: (args)->
+  ls: (args) ->
     files = fs.readdirSync @getCwd()
     filesBlocks = []
     files.forEach (filename) =>
       filesBlocks.push @_fileInfoHtml(filename, @getCwd())
-    filesBlocks = filesBlocks.sort (a, b)->
+    filesBlocks = filesBlocks.sort (a, b) ->
       aDir = a[1].isDirectory()
       bDir = b[1].isDirectory()
       if aDir and not bDir
@@ -146,7 +151,7 @@ class CommandOutputView extends View
       b[0]
     @message filesBlocks.join('') + '<div class="clear"/>'
 
-  _fileInfoHtml: (filename, parent)->
+  _fileInfoHtml: (filename, parent) ->
     classes = ['icon', 'file-info']
     filepath = parent + '/' + filename
     stat = fs.lstatSync filepath
@@ -176,7 +181,6 @@ class CommandOutputView extends View
 
   getGitStatusName: (path, gitRoot, repo) ->
     status = (repo.getCachedPathStatus or repo.getPathStatus)(path)
-    console.log 'path status', path, status
     if status
       if repo.isStatusModified status
         return 'modified'
@@ -197,7 +201,7 @@ class CommandOutputView extends View
     removeClass @statusIcon, 'status-success'
     addClass @statusIcon, 'status-error'
 
-  getCwd: ()->
+  getCwd: ->
     @cwd or atom.project.path or @userHome
 
   spawn: (inputCmd, cmd, args) ->
@@ -216,7 +220,7 @@ class CommandOutputView extends View
       addClass @statusIcon, 'status-running'
       @killBtn.removeClass 'hide'
       @program.once 'exit', (code) =>
-        console.log 'exit', code
+        console.log 'exit', code if atom.config.get('terminal-status.logConsole')
         @killBtn.addClass 'hide'
         removeClass @statusIcon, 'status-running'
         # removeClass @statusIcon, 'status-error'
@@ -224,15 +228,15 @@ class CommandOutputView extends View
         addClass @statusIcon, code == 0 and 'status-success' or 'status-error'
         @showCmd()
       @program.on 'error', (err) =>
-        console.log 'error'
+        console.log 'error' if atom.config.get('terminal-status.logConsole')
         @cliOutput.append err.message
         @showCmd()
         addClass @statusIcon, 'status-error'
-      @program.stdout.on 'data', () =>
+      @program.stdout.on 'data', =>
         @flashIconClass 'status-info'
         removeClass @statusIcon, 'status-error'
-      @program.stderr.on 'data', () =>
-        console.log 'stderr'
+      @program.stderr.on 'data', =>
+        console.log 'stderr' if atom.config.get('terminal-status.logConsole')
         @flashIconClass 'status-error', 300
 
     catch err

@@ -1,12 +1,12 @@
 {
-  "name": "terminal-status",
+  "name": "terminal-panel",
   "main": "./lib/cli-status",
-  "version": "1.4.0",
-  "description": "A terminal interface and status icon",
-  "repository": "https://github.com/guileen/terminal-status",
+  "version": "1.3.5",
+  "description": "A terminal interface and status icon. Fork of terminal-status",
+  "repository": "https://github.com/thedaniel/terminal-panel",
   "license": "MIT",
   "engines": {
-    "atom": ">0.50.0"
+    "atom": ">0.135.0"
   },
   "dependencies": {
     "ansi-html-stream": "0.0.3",
