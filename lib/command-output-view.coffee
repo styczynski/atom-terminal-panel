@@ -35,7 +35,9 @@ class CommandOutputView extends View
     @userHome = process.env.HOME or process.env.HOMEPATH or process.env.USERPROFILE
     cmd = 'test -e /etc/profile && source /etc/profile;test -e ~/.profile && source ~/.profile; node -pe "JSON.stringify(process.env)"'
     exec cmd, (code, stdout, stderr) ->
-      process.env = JSON.parse(stdout)
+      try
+        process.env = JSON.parse(stdout)
+      catch e
     atom.workspaceView.command "cli-status:toggle-output", =>
       @toggle()
 
