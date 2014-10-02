@@ -1,7 +1,7 @@
 {
   "name": "terminal-status",
   "main": "./lib/cli-status",
-  "version": "1.3.5",
+  "version": "1.4.0",
   "description": "A terminal interface and status icon",
   "repository": "https://github.com/guileen/terminal-status",
   "license": "MIT",
