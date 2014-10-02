@@ -25,8 +25,7 @@ class CommandOutputView extends View
             @span class: "icon icon-x"
             @span 'close'
       @div class: 'cli-panel-body', =>
-        @pre class: "terminal", outlet: "cliOutput",
-          "Welcome to terminal status. http://github.com/guileen/terminal-status"
+        @pre class: "terminal", outlet: "cliOutput"
         @subview 'cmdEditor', new EditorView(mini: true, placeholderText: 'input your command here')
 
   initialize: ->
