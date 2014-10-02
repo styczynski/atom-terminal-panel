@@ -7,7 +7,7 @@ class CliStatusView extends View
   @content: ->
     @div class: 'cli-status inline-block', =>
       @span outlet: 'termStatusContainer', =>
-      @span click: 'newTermClick', class: "cli-status icon icon-plus"
+        @span click: 'newTermClick', class: "cli-status icon icon-plus"
 
   commandViews: []
   activeIndex: 0
@@ -16,24 +16,25 @@ class CliStatusView extends View
     atom.workspaceView.command 'terminal-status:toggle', => @toggle()
     atom.workspaceView.command 'terminal-status:next', => @activeNextCommandView()
     atom.workspaceView.command 'terminal-status:prev', => @activePrevCommandView()
+    atom.workspaceView.command 'terminal-status:destroy', => @destroyActiveTerm()
     @createCommandView()
     @attach()
 
-  createCommandView: ()->
+  createCommandView: ->
     termStatus = domify '<span class="cli-status icon icon-terminal"></span>'
     commandOutputView = new CommandOutputView
     commandOutputView.statusIcon = termStatus
     commandOutputView.statusView = this
     @commandViews.push commandOutputView
-    termStatus.addEventListener 'click', () =>
+    termStatus.addEventListener 'click', ->
       commandOutputView.toggle()
     @termStatusContainer.append termStatus
     return commandOutputView
 
-  activeNextCommandView: ()->
+  activeNextCommandView: ->
     @activeCommandView @activeIndex + 1
 
-  activePrevCommandView: ()->
+  activePrevCommandView: ->
     @activeCommandView @activeIndex - 1
 
   activeCommandView: (index) ->
@@ -50,13 +51,14 @@ class CliStatusView extends View
     index = @commandViews.indexOf commandView
     index >=0 and @commandViews.splice index, 1
 
-  newTermClick: ()->
+  newTermClick: ->
     @createCommandView().toggle()
 
   attach: ->
     atom.workspaceView.statusBar.appendLeft(this)
-  # Returns an object that can be retrieved when package is activated
-  # serialize: ->
+
+  destroyActiveTerm: ->
+     @commandViews[@activeIndex]?.destroy()
 
   # Tear down any state and detach
   destroy: ->
@@ -65,4 +67,5 @@ class CliStatusView extends View
     @detach()
 
   toggle: ->
-    @commandViews[@activeIndex] and @commandViews[@activeIndex].toggle()
+    @createCommandView() unless @commandViews[@activeIndex]?
+    @commandViews[@activeIndex].toggle()
