@@ -1,5 +1,7 @@
-terminal-status
-===============
+terminal-panel
+==============
+
+(a fork of guileen/terminal-status)
 
 ## Usage
 Just press `shift-enter`
