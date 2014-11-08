@@ -3,7 +3,7 @@
 ansihtml = require 'ansi-html-stream'
 readline = require 'readline'
 {addClass, removeClass} = require 'domutil'
-{resolve} = require 'path'
+{resolve, dirname} = require 'path'
 fs = require 'fs'
 
 lastOpenedView = null
@@ -109,8 +109,7 @@ class CommandOutputView extends View
     @statusView.setActiveCommandView this
     @cmdEditor.focus()
 
-  close: ->
-    @lastLocation.activate()
+  close: ->    
     @detach()
     lastOpenedView = null
 
@@ -201,7 +200,7 @@ class CommandOutputView extends View
     addClass @statusIcon, 'status-error'
 
   getCwd: ->
-    @cwd or atom.project.path or @userHome
+    @cwd or dirname atom.project.path or @userHome
 
   spawn: (inputCmd, cmd, args) ->
     @cmdEditor.hide()
