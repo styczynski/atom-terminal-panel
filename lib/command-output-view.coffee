@@ -3,7 +3,7 @@
 ansihtml = require 'ansi-html-stream'
 readline = require 'readline'
 {addClass, removeClass} = require 'domutil'
-{resolve} = require 'path'
+{resolve, dirname, extname} = require 'path'
 fs = require 'fs'
 
 lastOpenedView = null
@@ -201,7 +201,9 @@ class CommandOutputView extends View
     addClass @statusIcon, 'status-error'
 
   getCwd: ->
-    @cwd or atom.project.path or @userHome
+    extFile = extname atom.project.path
+    projectDir = if extFile == "" then atom.project.path else dirname atom.project.path
+    @cwd or projectDir or @userHome
 
   spawn: (inputCmd, cmd, args) ->
     @cmdEditor.hide()
