@@ -202,7 +202,20 @@ class CommandOutputView extends View
 
   getCwd: ->
     extFile = extname atom.project.path
-    projectDir = if extFile == "" then atom.project.path else dirname atom.project.path
+
+    if extFile == ""
+      if atom.project.path
+        projectDir = atom.project.path
+      else
+        if process.env.HOME
+          projectDir = process.env.HOME
+        else if process.env.USERPROFILE
+          projectDir = process.env.USERPROFILE
+        else
+          projectDir = '/'
+    else
+      projectDir = dirname atom.project.path
+
     @cwd or projectDir or @userHome
 
   spawn: (inputCmd, cmd, args) ->
