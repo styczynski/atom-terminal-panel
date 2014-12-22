@@ -19,7 +19,17 @@ module.exports =
   # serialize: ->
   #   cliStatusViewState: @cliStatusView.serialize()
 
-  configDefaults:
-    'WindowHeight': 300
-    'clearCommandInput': true
-    'logConsole': false
+  config:
+    'WindowHeight':
+      type: 'integer'
+      default: 300
+    'clearCommandInput':
+      type: 'boolean'
+      default: true
+    'logConsole':
+      type: 'boolean'
+      default: false
+    'overrideLs':
+      title: 'Override ls'
+      type: 'boolean'
+      default: true
