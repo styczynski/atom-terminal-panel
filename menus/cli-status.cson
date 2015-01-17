@@ -3,7 +3,7 @@
   {
     'label': 'Packages'
     'submenu': [
-      'label': 'Terminal Status'
+      'label': 'Terminal Panel'
       'submenu': [
         { 'label': 'New', 'command': 'terminal-panel:new' }
         { 'label': 'Toggle', 'command': 'terminal-panel:toggle' }
