@@ -7,7 +7,7 @@ module.exports =
     createStatusEntry = =>
       @cliStatusView = new CliStatusView(state.cliStatusViewState)
 
-    if atom.workspaceView.statusBar
+    if atom.views.getView(atom.workspace).statusBar
       createStatusEntry()
     else
       atom.packages.once 'activated', ->

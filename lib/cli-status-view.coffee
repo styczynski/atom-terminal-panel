@@ -1,4 +1,4 @@
-{View} = require 'atom'
+{View} = require 'atom-space-pen-views'
 domify = require 'domify'
 CommandOutputView = require './command-output-view'
 
@@ -12,11 +12,13 @@ class CliStatusView extends View
   commandViews: []
   activeIndex: 0
   initialize: (serializeState) ->
-    atom.workspaceView.command 'terminal-panel:new', => @newTermClick()
-    atom.workspaceView.command 'terminal-panel:toggle', => @toggle()
-    atom.workspaceView.command 'terminal-panel:next', => @activeNextCommandView()
-    atom.workspaceView.command 'terminal-panel:prev', => @activePrevCommandView()
-    atom.workspaceView.command 'terminal-panel:destroy', => @destroyActiveTerm()
+    atom.commands.add 'atom-workspace',
+      'terminal-panel:new': => @newTermClick()
+      'terminal-panel:toggle': => @toggle()
+      'terminal-panel:next': => @activeNextCommandView()
+      'terminal-panel:prev': => @activePrevCommandView()
+      'terminal-panel:destroy': => @destroyActiveTerm()
+
     @createCommandView()
     @attach()
 
@@ -55,7 +57,7 @@ class CliStatusView extends View
     @createCommandView().toggle()
 
   attach: ->
-    atom.workspaceView.statusBar.appendLeft(this)
+    atom.views.getView(atom.workspace).statusBar.appendLeft(this)
 
   destroyActiveTerm: ->
      @commandViews[@activeIndex]?.destroy()
