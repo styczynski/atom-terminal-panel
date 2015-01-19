@@ -1,4 +1,4 @@
-{View, EditorView} = require 'atom'
+{TextEditorView, View} = require 'atom-space-pen-views'
 {spawn, exec} = require 'child_process'
 ansihtml = require 'ansi-html-stream'
 readline = require 'readline'
@@ -26,7 +26,7 @@ class CommandOutputView extends View
             @span 'close'
       @div class: 'cli-panel-body', =>
         @pre class: "terminal", outlet: "cliOutput"
-        @subview 'cmdEditor', new EditorView(mini: true, placeholderText: 'input your command here')
+        @subview 'cmdEditor', new TextEditorView(mini: true, placeholderText: 'input your command here')
 
   initialize: ->
     @subscribe atom.config.observe 'terminal-panel.WindowHeight', => @adjustWindowHeight()
@@ -37,11 +37,11 @@ class CommandOutputView extends View
       try
         process.env = JSON.parse(stdout)
       catch e
-    atom.workspaceView.command "cli-status:toggle-output", =>
-      @toggle()
+    atom.commands.add 'atom-workspace',
+      "cli-status:toggle-output": => @toggle()
 
     @on "core:confirm", =>
-      inputCmd = @cmdEditor.getEditor().getText()
+      inputCmd = @cmdEditor.getModel().getText()
       @cliOutput.append "\n$>#{inputCmd}\n"
       @scrollToBottom()
       args = []
@@ -67,7 +67,7 @@ class CommandOutputView extends View
 
   showCmd: ->
     @cmdEditor.show()
-    @cmdEditor.getEditor().selectAll()
+    @cmdEditor.getModel().selectAll()
     @cmdEditor.setText('') if atom.config.get('terminal-panel.clearCommandInput')
     @cmdEditor.focus()
     @scrollToBottom()
@@ -101,7 +101,7 @@ class CommandOutputView extends View
 
   open: ->
     @lastLocation = atom.workspace.getActivePane()
-    atom.workspaceView.prependToBottom(this) unless @hasParent()
+    atom.workspace.addBottomPanel(item: this) unless @hasParent()
     if lastOpenedView and lastOpenedView != this
       lastOpenedView.close()
     lastOpenedView = this
