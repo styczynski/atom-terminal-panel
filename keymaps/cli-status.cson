@@ -7,14 +7,14 @@
 
 # For more detailed documentation see
 # https://atom.io/docs/latest/advanced/keymaps
-'.platform-darwin .workspace':
+'.platform-darwin atom-workspace':
   'shift-enter': 'terminal-panel:toggle'
   'cmd-shift-t': 'terminal-panel:new'
   'cmd-shift-j': 'terminal-panel:next'
   'cmd-shift-k': 'terminal-panel:prev'
   'cmd-shift-x': 'terminal-panel:destroy'
 
-'.platform-linux .workspace, .platform-win32 .workspace':
+'.platform-linux atom-workspace, .platform-win32 atom-workspace':
   'shift-enter': 'terminal-panel:toggle'
   'alt-shift-t': 'terminal-panel:new'
   'alt-shift-j': 'terminal-panel:next'

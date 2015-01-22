@@ -29,8 +29,6 @@ class CommandOutputView extends View
         @subview 'cmdEditor', new TextEditorView(mini: true, placeholderText: 'input your command here')
 
   initialize: ->
-    @subscribe atom.config.observe 'terminal-panel.WindowHeight', => @adjustWindowHeight()
-
     @userHome = process.env.HOME or process.env.HOMEPATH or process.env.USERPROFILE
     cmd = 'test -e /etc/profile && source /etc/profile;test -e ~/.profile && source ~/.profile; node -pe "JSON.stringify(process.env)"'
     exec cmd, (code, stdout, stderr) ->
