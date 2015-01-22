@@ -1,7 +1,7 @@
 {
   "name": "terminal-panel",
   "main": "./lib/cli-status",
-  "version": "1.9.0",
+  "version": "1.9.1",
   "description": "A terminal interface and status icon. Fork of terminal-status",
   "repository": "https://github.com/thedaniel/terminal-panel",
   "license": "MIT",
