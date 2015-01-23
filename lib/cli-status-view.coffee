@@ -57,7 +57,7 @@ class CliStatusView extends View
     @createCommandView().toggle()
 
   attach: ->
-    atom.views.getView(atom.workspace).statusBar.appendLeft(this)
+    document.querySelector("status-bar").addLeftTile(item: this, priority: 100)
 
   destroyActiveTerm: ->
      @commandViews[@activeIndex]?.destroy()
