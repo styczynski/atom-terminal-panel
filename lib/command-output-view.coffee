@@ -36,7 +36,7 @@ class CommandOutputView extends View
         process.env = JSON.parse(stdout)
       catch e
     atom.commands.add 'atom-workspace',
-      "cli-status:toggle-output": => @toggle()
+      "terminal-panel:toggle-output": => @toggle()
 
     @on "core:confirm", =>
       inputCmd = @cmdEditor.getModel().getText()

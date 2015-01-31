@@ -12,6 +12,7 @@ class CliStatusView extends View
   commandViews: []
   activeIndex: 0
   initialize: (serializeState) ->
+    console.error "View initialized"
     atom.commands.add 'atom-workspace',
       'terminal-panel:new': => @newTermClick()
       'terminal-panel:toggle': => @toggle()

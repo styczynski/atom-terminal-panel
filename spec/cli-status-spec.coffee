@@ -8,31 +8,28 @@ CliStatus = require '../lib/cli-status'
 describe "CliStatus", ->
   activationPromise = null
 
-  beforeEach ->
-    atom.workspaceView = new WorkspaceView
-    activationPromise = atom.packages.activatePackage('cliStatus')
-
-  describe "when the cli-status:toggle event is triggered", ->
+  describe "when the terminal-panel:toggle event is triggered", ->
     it "attaches and then detaches the view", ->
-      expect(atom.workspaceView.find('.cli-status')).not.toExist()
+      workspaceView = atom.views.getView(atom.workspace)
+      expect(workspaceView.querySelector('.cli-status')).not.toExist()
 
       # This is an activation event, triggering it will cause the package to be
       # activated.
-      atom.workspaceView.trigger 'cli-status:toggle'
 
       waitsForPromise ->
-        activationPromise
+        atom.packages.activatePackage('status-bar')
+      waitsForPromise ->
+        atom.packages.activatePackage('terminal-panel')
 
       runs ->
-        expect(atom.workspaceView.find('.cli-status')).toExist()
-        atom.workspaceView.trigger 'cli-status:toggle'
-        expect(atom.workspaceView.find('.cli-status')).not.toExist()
+        expect(workspaceView.querySelector('.cli-status')).toExist()
+        expect(workspaceView.querySelector('.cli-status')).not.toExist()
 
   describe "when cli-status is activated", ->
     it "should have configuration set up with defaults"
 
     waitsForPromise ->
-      activationPromise
+        atom.packages.activatePackage('terminal-panel')
 
     runs ->
         expect(atom.config.get('terminal-panel.WindowHeight')).toBe(300)
