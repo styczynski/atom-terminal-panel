@@ -3,7 +3,7 @@
   "main": "./lib/cli-status",
   "version": "4.0.1",
   "description": "An advanced ATOM terminal interface. Fork of awesome atom package - terminal-panel",
-  "repository": "url": "https://github.com/isis97/atom-terminal-panel",
+  "repository": "https://github.com/isis97/atom-terminal-panel",
   "license": "MIT",
   "engines": {
     "atom": ">0.135.0"
