@@ -19,7 +19,7 @@ class CliCore
       ]
 
   createDefaultCommandsFile: () ->
-    if atom.config.get('terminal-panel.enableUserCommands')
+    if atom.config.get('atom-terminal-panel.enableUserCommands')
       try
         content = JSON.stringify {commands: @state.defaultCommands}
         fs.writeFileSync @state.statePath, content
@@ -59,12 +59,12 @@ class CliCore
     return @state.config
 
   getUserCommands: () ->
-    if atom.config.get('terminal-panel.enableUserCommands')
+    if atom.config.get('atom-terminal-panel.enableUserCommands')
       return @state.customCommands
     return null
 
   findUserCommandAction: (cmd) ->
-    if not atom.config.get('terminal-panel.enableUserCommands')
+    if not atom.config.get('atom-terminal-panel.enableUserCommands')
       return null
     for name, code of @state.customCommands
       if name == cmd
@@ -72,7 +72,7 @@ class CliCore
     return null
 
   findUserCommand: (cmd) ->
-    if not atom.config.get('terminal-panel.enableUserCommands')
+    if not atom.config.get('atom-terminal-panel.enableUserCommands')
       return null
     action = @findUserCommandAction(cmd)
     if not action?

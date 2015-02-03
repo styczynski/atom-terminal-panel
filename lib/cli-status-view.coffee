@@ -13,12 +13,12 @@ class CliStatusView extends View
   activeIndex: 0
   initialize: (serializeState) ->
     atom.commands.add 'atom-workspace',
-      'terminal-panel:new': => @newTermClick()
-      'terminal-panel:toggle': => @toggle()
-      'terminal-panel:next': => @activeNextCommandView()
-      'terminal-panel:prev': => @activePrevCommandView()
-      'terminal-panel:destroy': => @destroyActiveTerm()
-      'terminal-panel:compile': => @getForcedActiveCommandView().compile()
+      'atom-terminal-panel:new': => @newTermClick()
+      'atom-terminal-panel:toggle': => @toggle()
+      'atom-terminal-panel:next': => @activeNextCommandView()
+      'atom-terminal-panel:prev': => @activePrevCommandView()
+      'atom-terminal-panel:destroy': => @destroyActiveTerm()
+      'atom-terminal-panel:compile': => @getForcedActiveCommandView().compile()
 
     @createCommandView()
     @attach()

@@ -120,7 +120,7 @@ class CommandOutputView extends View
       if values.file?
         file = values.file
 
-    if not atom.config.get('terminal-panel.parseSpecialTemplateTokens')
+    if not atom.config.get('atom-terminal-panel.parseSpecialTemplateTokens')
       return prompt.replace /%\([^ ]*\)/ig, ''
 
     for key, value of values
@@ -190,7 +190,7 @@ class CommandOutputView extends View
       ret = @consoleLink target
       return ret
 
-    if atom.config.get 'terminal-panel.enableConsoleLabels'
+    if atom.config.get 'atom-terminal-panel.enableConsoleLabels'
       prompt = prompt.replace /%\(label:[^\n\t\[\]{}%\)\(]*\)/ig, (match, text, urlId) =>
         target = @replaceAll '%(label:', '', match
         target = target.substring 0, target.length-1
@@ -214,7 +214,7 @@ class CommandOutputView extends View
     return prompt
 
   getCommandPrompt: (cmd) ->
-    return @parseSpecialStringTemplate atom.config.get('terminal-panel.commandPrompt'), {cmd: cmd}
+    return @parseSpecialStringTemplate atom.config.get('atom-terminal-panel.commandPrompt'), {cmd: cmd}
 
   delay: (callback, delay=100) ->
     setTimeout callback, delay
@@ -348,7 +348,7 @@ class CommandOutputView extends View
     return @cmdEditor.setText ''
 
   isCommandEnabled: (name) ->
-    disabledCommands = atom.config.get('terminal-panel.disabledExtendedCommands')
+    disabledCommands = atom.config.get('atom-terminal-panel.disabledExtendedCommands')
     if name in disabledCommands
       return false
     return true
@@ -391,7 +391,7 @@ class CommandOutputView extends View
   showInitMessage: () ->
     if @helloMessageShown
       return
-    if atom.config.get 'terminal-panel.enableConsoleStartupInfo'
+    if atom.config.get 'atom-terminal-panel.enableConsoleStartupInfo'
       hello_message = @consolePanel 'ATOM Terminal', 'Please enter new commands to the box below.<br>The console supports special anotattion like: %(path), %(file), %(link:file.something).<br>It also supports special HTML elements like: %(tooltip:A:content:B) and so on.<br>Hope you\'ll enjoy the terminal.'
       @rawMessage hello_message
       @helloMessageShown = true
@@ -422,7 +422,7 @@ class CommandOutputView extends View
           s = s.replace /~/g, @userHome
         args.push s
       cmd = args.shift()
-      if atom.config.get('terminal-panel.enableExtendedCommands')
+      if atom.config.get('atom-terminal-panel.enableExtendedCommands')
         if @isCommandEnabled(cmd)
           action = null
           if core.findUserCommand(cmd) != null
@@ -441,7 +441,7 @@ class CommandOutputView extends View
         # @commandProgress -1
       # if cmd == 'cd'
       #  return @cd args
-      # if cmd == 'ls' and atom.config.get('terminal-panel.overrideLs')
+      # if cmd == 'ls' and atom.config.get('atom-terminal-panel.overrideLs')
       #  return @ls args
       # if cmd == 'clear'
       #  return @clear()
@@ -455,13 +455,13 @@ class CommandOutputView extends View
     return @cmdEditor.setText ''
 
   adjustWindowHeight: ->
-    maxHeight = atom.config.get('terminal-panel.WindowHeight')
+    maxHeight = atom.config.get('atom-terminal-panel.WindowHeight')
     @cliOutput.css("max-height", "#{maxHeight}px")
 
   showCmd: ->
     @cmdEditor.show()
     @cmdEditor.getModel().selectAll()
-    @cmdEditor.setText('') if atom.config.get('terminal-panel.clearCommandInput')
+    @cmdEditor.setText('') if atom.config.get('atom-terminal-panel.clearCommandInput')
     @cmdEditor.focus()
     @scrollToBottom()
 
@@ -493,7 +493,7 @@ class CommandOutputView extends View
       @program.kill()
 
   open: ->
-    if disabledCommands = atom.config.get('terminal-panel.moveToCurrentDirOnOpen')
+    if disabledCommands = atom.config.get('atom-terminal-panel.moveToCurrentDirOnOpen')
       @moveToCurrentDirectory()
     @lastLocation = atom.workspace.getActivePane()
     atom.workspace.addBottomPanel(item: this) unless @hasParent()
@@ -568,10 +568,10 @@ class CommandOutputView extends View
   parseSpecialNodes: () ->
     caller = this
 
-    if atom.config.get 'terminal-panel.enableConsoleInteractiveHints'
+    if atom.config.get 'atom-terminal-panel.enableConsoleInteractiveHints'
       $('.cli-tooltip[data-toggle="tooltip"]').tooltip()
 
-    if atom.config.get 'terminal-panel.enableConsoleInteractiveLinks'
+    if atom.config.get 'atom-terminal-panel.enableConsoleInteractiveLinks'
       @find('.console-link').each (
         () ->
           el = $(this)
@@ -623,7 +623,7 @@ class CommandOutputView extends View
     return '<div class="panel panel-info"><div class="panel-heading"><span class="glyphicon glyphicon-info-sign" aria-hidden="true"></span> '+title+'</div><div class="panel-body">'+content+'</div></div><br><br>'
 
   consoleLabel: (type, text) ->
-    if not atom.config.get 'terminal-panel.enableConsoleLabels'
+    if not atom.config.get 'atom-terminal-panel.enableConsoleLabels'
       return text
 
     if not text?
@@ -693,7 +693,7 @@ class CommandOutputView extends View
         file_exists = false
 
     if file_exists
-      if atom.config.get('terminal-panel.enableConsoleInteractiveLinks')
+      if atom.config.get('atom-terminal-panel.enableConsoleInteractiveLinks')
         classes.push 'console-link'
       if stat.isSymbolicLink()
         # classes.push 'icon-file-symlink-file'
@@ -778,8 +778,8 @@ class CommandOutputView extends View
       return ''
 
 
-    if atom.config.get('terminal-panel.textReplacementFileAdress')?
-      if atom.config.get('terminal-panel.textReplacementFileAdress') != ''
+    if atom.config.get('atom-terminal-panel.textReplacementFileAdress')?
+      if atom.config.get('atom-terminal-panel.textReplacementFileAdress') != ''
         cwdN = @getCwd()
         cwdE = @replaceAll '/', '\\', @getCwd()
         regexString ='(' + (@escapeRegExp cwdN) + '|' + (@escapeRegExp cwdE) + ')\\\\[A-Za-z\\- ]+\\.?[A-Za-z\\-]*'
@@ -788,20 +788,20 @@ class CommandOutputView extends View
         regex = new RegExp(regexString, 'ig')
         message = message.replace regex, (match, text, urlId) =>
           # @rawMessage 'file = '+match+'\n'
-          return @parseSpecialStringTemplate atom.config.get('terminal-panel.textReplacementFileAdress'), {file:match}
+          return @parseSpecialStringTemplate atom.config.get('atom-terminal-panel.textReplacementFileAdress'), {file:match}
     message = @preserveOriginalPaths message
 
     # message = @preserveOriginalPaths message
 
-    if atom.config.get('terminal-panel.textReplacementCurrentFile')?
-      if atom.config.get('terminal-panel.textReplacementCurrentFile') != ''
-        repl = @parseSpecialStringTemplate atom.config.get('terminal-panel.textReplacementCurrentFile')
+    if atom.config.get('atom-terminal-panel.textReplacementCurrentFile')?
+      if atom.config.get('atom-terminal-panel.textReplacementCurrentFile') != ''
+        repl = @parseSpecialStringTemplate atom.config.get('atom-terminal-panel.textReplacementCurrentFile')
         message = @replaceAll @getCurrentFilePath(), repl, message
     message = @preserveOriginalPaths message
 
-    if atom.config.get('terminal-panel.textReplacementCurrentPath')?
-      if atom.config.get('terminal-panel.textReplacementCurrentPath') != ''
-        repl = @parseSpecialStringTemplate atom.config.get('terminal-panel.textReplacementCurrentPath')
+    if atom.config.get('atom-terminal-panel.textReplacementCurrentPath')?
+      if atom.config.get('atom-terminal-panel.textReplacementCurrentPath') != ''
+        repl = @parseSpecialStringTemplate atom.config.get('atom-terminal-panel.textReplacementCurrentPath')
         message = @replaceAll @getCwd(), repl, message
     message = @preserveOriginalPaths message
 
@@ -913,7 +913,7 @@ class CommandOutputView extends View
       addClass @statusIcon, 'status-running'
       @killBtn.removeClass 'hide'
       @program.once 'exit', (code) =>
-        console.log 'exit', code if atom.config.get('terminal-panel.logConsole')
+        console.log 'exit', code if atom.config.get('atom-terminal-panel.logConsole')
         @killBtn.addClass 'hide'
         removeClass @statusIcon, 'status-running'
         # removeClass @statusIcon, 'status-error'
@@ -921,7 +921,7 @@ class CommandOutputView extends View
         addClass @statusIcon, code == 0 and 'status-success' or 'status-error'
         @showCmd()
       @program.on 'error', (err) =>
-        console.log 'error' if atom.config.get('terminal-panel.logConsole')
+        console.log 'error' if atom.config.get('atom-terminal-panel.logConsole')
         @message(err.message)
         @showCmd()
         addClass @statusIcon, 'status-error'
@@ -929,7 +929,7 @@ class CommandOutputView extends View
         @flashIconClass 'status-info'
         removeClass @statusIcon, 'status-error'
       @program.stderr.on 'data', =>
-        console.log 'stderr' if atom.config.get('terminal-panel.logConsole')
+        console.log 'stderr' if atom.config.get('atom-terminal-panel.logConsole')
         @flashIconClass 'status-error', 300
 
     catch err
