@@ -8,11 +8,11 @@ Just press `shift-enter`
 
 ## Screenshot
 
-Open multiple terminal.
+Terminal with fancy file links and interative interface.
 
 ![A screenshot of atom-terminal-panel package](https://raw.githubusercontent.com/isis97/atom-terminal-panel/master/static/example.gif)
 
-Fancy ls.
+Fancy custom highlighting rules.
 
 ![A screenshot of atom-terminal-panel package](https://raw.githubusercontent.com/isis97/atom-terminal-panel/master/static/example2.gif)
 
@@ -25,7 +25,6 @@ Fancy ls.
 * file and foler links (auto path detection)
 * interactive content (tooltips and on-click-actions)
 * highlighting rules (define your own highlight options - supports awesome stuff like regex matching, replacement and link creation)
-<<<<<<< HEAD
 * own commands support
 
 ## Terminal-commands.json
@@ -39,7 +38,6 @@ The config file contains:
 The sample config file can look like:
 
 ```json
-
 {
   "commands": {
     "hello": [
@@ -59,6 +57,7 @@ The sample config file can look like:
         "color": "yellow"
       }
     }
+  }
 }
 ```
 
@@ -69,7 +68,7 @@ The above config will create highlight rule for all lines containing "warning: "
 Each command is defined the following way:
 
 ```json
-'name': [ 'command0', 'command1', 'command2']
+"name": [ "command0", "command1", "command2"]
 ```
 'command0', 'command1'... are the commands that will be invoked by the user entry.
 
@@ -78,19 +77,19 @@ Each command is defined the following way:
 The highligh rules can be defined using two methods.
 The simple way looks like:
 ```json
-  'regexp' : {
-    'css-property1': 'css-value1',
-    'css-property2': 'css-value2',
-    'css-property3': 'css-value3'
+  "regexp" : {
+    "css-property1": "css-value1",
+    "css-property2": "css-value2",
+    "css-property3": "css-value3"
   }
 ```
 
 Or more complex (and also more powerful) way:
 ```json
-  'REGEXP' : {
-    'match' : {
-      'matchLine': 'true',
-      'replace': 'REPLACEMENT'
+  "REGEXP" : {
+    "match" : {
+      "matchLine": "true",
+      "replace": "REPLACEMENT"
     },
     "css": {
       "color": "red",
@@ -123,8 +122,6 @@ You can use special annotation (on commands/rules definitions or in settings - c
 You can modify the ./config/extensions.less file and add your own extension colouring rules.
 The ./config/functional-commands-external.coffee file contains the external functional commands (you can add your own commands).
 The ./config/terminal-style.less contains the general terminal stylesheet.
-=======
->>>>>>> origin/master
 
 ## Hotkeys
 
@@ -132,7 +129,3 @@ The ./config/terminal-style.less contains the general terminal stylesheet.
 * `command-shift-t` new terminal
 * `command-shift-j` next terminal
 * `command-shift-k` prev terminal
-<<<<<<< HEAD
-=======
-
->>>>>>> origin/master
