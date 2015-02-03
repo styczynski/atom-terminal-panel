@@ -10,11 +10,11 @@ Just press `shift-enter`
 
 Open multiple terminal.
 
-![A screenshot of atom-terminal-panel package](https://github.com/isis97/atom-terminal-panel/tree/master/static/example.gif)
+![A screenshot of atom-terminal-panel package](https://raw.githubusercontent.com/isis97/atom-terminal-panel/master/static/example.gif)
 
 Fancy ls.
 
-![A screenshot of atom-terminal-panel package](https://github.com/isis97/atom-terminal-panel/tree/master/static/example2.gif)
+![A screenshot of atom-terminal-panel package](https://raw.githubusercontent.com/isis97/atom-terminal-panel/master/static/example2.gif)
 
 ## Feature
 
