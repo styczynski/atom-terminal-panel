@@ -9,6 +9,7 @@
         { 'label': 'Toggle', 'command': 'terminal-panel:toggle' }
         { 'label': 'Prev', 'command': 'terminal-panel:prev' }
         { 'label': 'Next', 'command': 'terminal-panel:next' }
+        { 'label': 'Compile', 'command': 'terminal-panel:compile'}
       ]
     ]
   }

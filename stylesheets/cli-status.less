@@ -26,11 +26,36 @@
     overflow-y: scroll;
     bottom: @component-padding;
 
+    @import "../config/terminal-style";
+
+    .file-extension {
+      .parent-folder {
+        font-weight: 900;
+        color: red;
+      }
+      @import "../config/extensions";
+    }
+
     .file-info {
       width: 140px;
       display: inline-block;
       // height: 2.5em;
       float: left;
+    }
+    .file-not-found {
+        text-decoration: line-through;
+        color: #A41629;
+        cursor: not-allowed;
+    }
+    .console-link {
+      cursor: pointer;
+    }
+    .console-link:hover {
+      text-decoration: underline;
+    }
+    .console-link.link-used {
+      font-weight: bold;
+      color: #8B3E2F;
     }
     .stat-program {
       color: #26c26a;

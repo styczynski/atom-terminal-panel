@@ -18,6 +18,7 @@ class CliStatusView extends View
       'terminal-panel:next': => @activeNextCommandView()
       'terminal-panel:prev': => @activePrevCommandView()
       'terminal-panel:destroy': => @destroyActiveTerm()
+      'terminal-panel:compile': => @getForcedActiveCommandView().compile()
 
     @createCommandView()
     @attach()
@@ -31,6 +32,7 @@ class CliStatusView extends View
     termStatus.addEventListener 'click', ->
       commandOutputView.toggle()
     @termStatusContainer.append termStatus
+    commandOutputView.init()
     return commandOutputView
 
   activeNextCommandView: ->
@@ -45,6 +47,16 @@ class CliStatusView extends View
     if index < 0
       index = @commandViews.length - 1
     @commandViews[index] and @commandViews[index].open()
+
+  getActiveCommandView: () ->
+    return @commandViews[@activeIndex]
+
+  getForcedActiveCommandView: () ->
+    if @getActiveCommandView() != null && @getActiveCommandView() != undefined
+      return @getActiveCommandView()
+    ret = @activeCommandView(0)
+    @toggle()
+    return ret
 
   setActiveCommandView: (commandView) ->
     @activeIndex = @commandViews.indexOf commandView
