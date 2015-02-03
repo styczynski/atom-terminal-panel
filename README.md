@@ -1,7 +1,7 @@
-terminal-panel
+atom-terminal-panel
 ==============
 
-(a fork of guileen/terminal-status)
+(a fork of super-awesome atom package - thedaniel/terminal-panel)
 
 ## Usage
 Just press `shift-enter`
@@ -22,6 +22,9 @@ Fancy ls.
 * colorful status icon
 * kill long live process
 * fancy ls
+* file and foler links (auto path detection)
+* interactive content (tooltips and on-click-actions)
+* highlighting rules (define your own highlight options - supports awesome stuff like regex matching, replacement and link creation)
 
 ## Hotkeys
 
@@ -30,14 +33,3 @@ Fancy ls.
 * `command-shift-j` next terminal
 * `command-shift-k` prev terminal
 
-## Changelog
-
-* 1.3.4
-  * use `child_process.exec` instead of `child_process.spawn`, support pipe like command
-
-* 1.3.3
-  * source ~/.profile and /etc/profile for environment variables.
-
-* 1.3.2
-  * fix PATH of /usr/local/bin
-  * support ~
