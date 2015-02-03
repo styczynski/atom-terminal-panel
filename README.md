@@ -25,6 +25,7 @@ Fancy ls.
 * file and foler links (auto path detection)
 * interactive content (tooltips and on-click-actions)
 * highlighting rules (define your own highlight options - supports awesome stuff like regex matching, replacement and link creation)
+<<<<<<< HEAD
 * own commands support
 
 ## Terminal-commands.json
@@ -122,6 +123,8 @@ You can use special annotation (on commands/rules definitions or in settings - c
 You can modify the ./config/extensions.less file and add your own extension colouring rules.
 The ./config/functional-commands-external.coffee file contains the external functional commands (you can add your own commands).
 The ./config/terminal-style.less contains the general terminal stylesheet.
+=======
+>>>>>>> origin/master
 
 ## Hotkeys
 
@@ -129,3 +132,7 @@ The ./config/terminal-style.less contains the general terminal stylesheet.
 * `command-shift-t` new terminal
 * `command-shift-j` next terminal
 * `command-shift-k` prev terminal
+<<<<<<< HEAD
+=======
+
+>>>>>>> origin/master
