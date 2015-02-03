@@ -106,6 +106,7 @@ You can use special annotation (on commands/rules definitions or in settings - c
 * %(path) or %(cwd) - refers to the current working directory path
 * %(file) - refers to the current file
 * %(line) - refers to the input command number
+* %(link:FILEPATH) - creates an interactive link for the given filepath
 * %(day)/%(month)/%(year)/%(hours)/%(minutes)/%(milis) - refers to the current time
 * %(disc) - refers to the current file disc location name
 * %(path:0)/%(path:1)/%(path:2)... - refers to the current file path component (path:0 is a disc name)
