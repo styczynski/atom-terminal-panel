@@ -4,7 +4,7 @@ atom-terminal-panel
 (a fork of super-awesome atom package - thedaniel/terminal-panel)
 
 ## Usage
-Just press `shift-enter`
+Just press `shift-enter` or just `` ` `` (backtick) and enjoy your cool ATOM terminal :D
 
 ## Screenshot
 
@@ -26,6 +26,7 @@ Fancy custom highlighting rules.
 * interactive content (tooltips and on-click-actions)
 * highlighting rules (define your own highlight options - supports awesome stuff like regex matching, replacement and link creation)
 * own commands support
+* nice looking slide animation on terminal open
 
 ## Terminal-commands.json
 The `terminal-commands.json` is the main config file for this package. If it's not present (or the JSON syntax is invalid) a new config file is created (in folder .atom).
@@ -171,7 +172,6 @@ font-weight: bold;
 * `` ` `` - toggle terminal
 * `escape` (in focused input box) - close terminal
 
-## Changelog 
+## Changelog
 
-* v4.0.7 - Added slide terminal animation (use backtick key trigger for better experience :) ) 
-
+* v4.0.7 - Added slide terminal animation (use backtick key trigger for better experience :) )
