@@ -71,7 +71,7 @@ module.exports =
     'moveToCurrentDirOnOpen':
       title: 'Always move to currently selected file\'s directory when the console is opened.'
       type: 'boolean'
-      default: true
+      default: false
     'parseSpecialTemplateTokens':
       title: 'Enable the special tokens (like: %(path), %(day) etc.)'
       type: 'boolean'
