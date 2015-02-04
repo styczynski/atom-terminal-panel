@@ -82,7 +82,7 @@ class CommandOutputView extends View
     "memdump": (state, args) ->
       return state.getLocalCommandsMemdump()
     "?": (state, args) ->
-      return state.exec 'memdump'
+      return state.exec 'memdump', state, args
     "exit": (state, args) ->
       state.destroy()
     "update": (state, args) ->
@@ -109,7 +109,6 @@ class CommandOutputView extends View
 
   commandLineNotCounted: () ->
     @inputLine--
-
 
   parseSpecialStringTemplate: (prompt, values) ->
     cmd = null
@@ -306,8 +305,9 @@ class CommandOutputView extends View
     cmd = @replaceAll "%(^)", (@replaceAll "%(^)", "", cmd), cmd
     argsNum = args.length - 1
     for i in [0..argsNum] by 1
-      v = args[i].replace /\n/ig, ''
-      cmd = @replaceAll "%(#{i})", v, cmd
+      if args[i] instanceof String
+        v = args[i].replace /\n/ig, ''
+        cmd = @replaceAll "%(#{i})", v, cmd
     for i in [argsNum+1..100] by 1
       cmd = @replaceAll "%(#{i})", '', cmd
 
@@ -318,7 +318,11 @@ class CommandOutputView extends View
       command = @getLocalCommand(cmd)
 
     if command?
-      ret = command(state, args)
+      if not state?
+        ret = null
+        throw 'The console functional (not native) command cannot be executed without caller information: \''+cmd+'\'.'
+      if command?
+        ret = command(state, args)
       @echoOn = true
       if not ret?
         return null
@@ -412,6 +416,8 @@ class CommandOutputView extends View
       @cmdEditor.addClass 'readonly'
       @inputLine++
       inputCmd = @cmdEditor.getModel().getText()
+      inputCmd = @parseSpecialStringTemplate inputCmd
+
       if @echoOn
         @message ("\n"+@getCommandPrompt(inputCmd)+"\n")
       @scrollToBottom()

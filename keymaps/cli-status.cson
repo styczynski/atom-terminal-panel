@@ -8,19 +8,20 @@
 # For more detailed documentation see
 # https://atom.io/docs/latest/advanced/keymaps
 '.platform-darwin atom-workspace':
-  'shift-enter': 'terminal-panel:toggle'
-  'cmd-shift-t': 'terminal-panel:new'
-  'cmd-shift-j': 'terminal-panel:next'
-  'cmd-shift-k': 'terminal-panel:prev'
-  'cmd-shift-x': 'terminal-panel:destroy'
+  'shift-enter': 'atom-terminal-panel:toggle'
+  'cmd-shift-t': 'atom-terminal-panel:new'
+  'cmd-shift-j': 'atom-terminal-panel:next'
+  'cmd-shift-k': 'atom-terminal-panel:prev'
+  'cmd-shift-x': 'atom-terminal-panel:destroy'
 
 '.platform-linux atom-workspace, .platform-win32 atom-workspace':
-  'shift-enter': 'terminal-panel:toggle'
-  'alt-shift-t': 'terminal-panel:new'
-  'alt-shift-j': 'terminal-panel:next'
-  'alt-shift-k': 'terminal-panel:prev'
-  'alt-shift-x': 'terminal-panel:destroy'
+  'shift-enter': 'atom-terminal-panel:toggle'
+  'alt-shift-t': 'atom-terminal-panel:new'
+  'alt-shift-j': 'atom-terminal-panel:next'
+  'alt-shift-k': 'atom-terminal-panel:prev'
+  'alt-shift-x': 'atom-terminal-panel:destroy'
 
 '.cli-status':
   'cmd-c': 'native!'
   'ctrl-c': 'native!'
+  'f11': 'atom-terminal-panel:compile'
