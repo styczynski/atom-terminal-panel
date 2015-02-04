@@ -13,6 +13,7 @@
   'cmd-shift-j': 'atom-terminal-panel:next'
   'cmd-shift-k': 'atom-terminal-panel:prev'
   'cmd-shift-x': 'atom-terminal-panel:destroy'
+  '`': 'atom-terminal-panel:toggle'
 
 '.platform-linux atom-workspace, .platform-win32 atom-workspace':
   'shift-enter': 'atom-terminal-panel:toggle'
@@ -20,8 +21,12 @@
   'alt-shift-j': 'atom-terminal-panel:next'
   'alt-shift-k': 'atom-terminal-panel:prev'
   'alt-shift-x': 'atom-terminal-panel:destroy'
+  '`': 'atom-terminal-panel:toggle'
 
 '.cli-status':
   'cmd-c': 'native!'
   'ctrl-c': 'native!'
   'f11': 'atom-terminal-panel:compile'
+
+'.cli-panel-body':
+  'escape': 'atom-terminal-panel:toggle'

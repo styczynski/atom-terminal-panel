@@ -24,6 +24,10 @@ module.exports =
     'WindowHeight':
       type: 'integer'
       default: 300
+    'enableWindowAnimations':
+      title: 'Enable window animations'
+      type: 'boolean'
+      default: true
     'clearCommandInput':
       type: 'boolean'
       default: true

@@ -14,9 +14,11 @@ core = require './cli-core'
 module.exports =
 class CommandOutputView extends View
   cwd: null
+  _cmdintdel: 50
   echoOn: true
-  inputLine: 0
+  inputLine: 50
   helloMessageShown: false
+  minHeight: 250
 
   @content: ->
     @div tabIndex: -1, class: 'panel cli-status panel-bottom', =>
@@ -230,7 +232,7 @@ class CommandOutputView extends View
     if CURRENT_LOCATION?
       @cd [CURRENT_LOCATION]
       @clear()
-      @execDelayedCommand 250, 'ls', null, this
+      @execDelayedCommand @_cmdintdel, 'ls', null, this
 
   getCurrentFileName: ()->
     current_file = @getCurrentFilePath()
@@ -511,10 +513,31 @@ class CommandOutputView extends View
     @cmdEditor.focus()
     @showInitMessage()
 
+    if atom.config.get 'atom-terminal-panel.enableWindowAnimations'
+      @WindowMinHeight = @cliOutput.height() + @cmdEditor.height() + 50
+      @height 0
+      @animate {
+        height: @WindowMinHeight
+      }, 250, =>
+        @attr 'style', ''
+
+
   close: ->
-    @lastLocation.activate()
-    @detach()
-    lastOpenedView = null
+    if atom.config.get 'atom-terminal-panel.enableWindowAnimations'
+      @WindowMinHeight = @cliOutput.height() + @cmdEditor.height() + 50
+      @height @WindowMinHeight
+      @animate {
+        height: 0
+      }, 250, =>
+        @attr 'style', ''
+        @lastLocation.activate()
+        @detach()
+        lastOpenedView = null
+    else
+      @lastLocation.activate()
+      @detach()
+      lastOpenedView = null
+
 
   toggle: ->
     if @hasParent()
@@ -615,10 +638,10 @@ class CommandOutputView extends View
                           setTimeout () ->
                             moveToDir('..', messageDisp)
                           , 1500
-                    , 250
+                    , caller._cmdintdel
                   setTimeout () ->
                     moveToDir(link_target_name)
-                  , 250
+                  , caller._cmdintdel
       )
       # el.data('filenameLink', '')
 
@@ -626,7 +649,7 @@ class CommandOutputView extends View
     return '<div class="alert alert-danger alert-dismissible" role="alert"><button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button><strong>Warning!</strong> ' + text + '</div>'
 
   consolePanel: (title, content) ->
-    return '<div class="panel panel-info"><div class="panel-heading"><span class="glyphicon glyphicon-info-sign" aria-hidden="true"></span> '+title+'</div><div class="panel-body">'+content+'</div></div><br><br>'
+    return '<div class="panel panel-info"><div class="panel-heading">'+title+'</div><div class="panel-body">'+content+'</div></div><br><br>'
 
   consoleLabel: (type, text) ->
     if not atom.config.get 'atom-terminal-panel.enableConsoleLabels'
