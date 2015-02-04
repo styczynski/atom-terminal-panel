@@ -14,6 +14,10 @@ Terminal with fancy file links and interative interface.
 
 Fancy custom highlighting rules.
 
+![A screenshot of atom-terminal-panel package](https://raw.githubusercontent.com/isis97/atom-terminal-panel/master/static/example3.gif)
+
+Cutom highlighting and few commands:
+
 ![A screenshot of atom-terminal-panel package](https://raw.githubusercontent.com/isis97/atom-terminal-panel/master/static/example2.gif)
 
 ## Feature
