@@ -117,11 +117,50 @@ You can use special annotation (on commands/rules definitions or in settings - c
 * %(*) - refers to the all passed arguments (concatenated arguments list) (ONLY USER COMMANDS)
 * %(^) - refers to the command string (command with all arguments) (ONLY USER COMMANDS)
 
-## Internal configuration
+### Internal configuration
 
-You can modify the ./config/extensions.less file and add your own extension colouring rules.
+You can modify the extensions.less file and add your own extension colouring rules.
+E.g:
+```less
+  .txt {
+    color: hsl(185, 0.5, 0.5);
+    font-weight: bold;
+  }
+  .js {
+    color: red;
+  }
+```
+Simple like making a cup of fresh coffee...
+Just dot, extension name and CSS formatting.
+
 The ./config/functional-commands-external.coffee file contains the external functional commands (you can add your own commands).
-The ./config/terminal-style.less contains the general terminal stylesheet.
+E.g.
+```coffeescript
+"hello_world": (state, args)->
+  return 'Hello world'
+```
+The state is the terminal view object and the args - the array of all passesd parameters.
+Your custom functional command can also create console links using ```state.consoleLink path```, labels using ```state.consoleLabel type, text``` or execute other commands:
+E.g.
+```coffeescript
+"call_another": (state, args)->
+  return state.exec 'echo Hello world', state, args
+```
+But if you're using ```state.exec``` you must remember about passing not only command string but also state and args parameters.
+As you can see all terminal messages are displayed automatically (just return the string message). but you can also print them manually:
+```coffeescript
+"hello_world": (state, args)->
+  state.message 'Hello world'
+  return 'Second string hue hue :)'
+```
+
+The ./config/terminal-style.less contains the general terminal stylesheet:
+E.g.
+```less
+background-color: rgb(12, 12, 12);
+color: red;
+font-weight: bold;
+```
 
 ## Hotkeys
 
@@ -129,3 +168,10 @@ The ./config/terminal-style.less contains the general terminal stylesheet.
 * `command-shift-t` new terminal
 * `command-shift-j` next terminal
 * `command-shift-k` prev terminal
+* `` ` `` - toggle terminal
+* `escape` (in focused input box) - close terminal
+
+## Changelog 
+
+* v4.0.7 - Added slide terminal animation (use backtick key trigger for better experience :) ) 
+
