@@ -43,7 +43,7 @@ class CliCore
                 'color': 'yellow'
               }
             }
-            '(note|info):? (.*)': {
+            '(note|information):? (.*)': {
               'match': {
                 'matchLine': 'true'
                 'replace': '%(label:info:text:Info) %(0)'

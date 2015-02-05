@@ -19,6 +19,8 @@ class CommandOutputView extends View
   inputLine: 50
   helloMessageShown: false
   minHeight: 250
+  currentInputBox: null
+  currentInputBoxTmr: null
 
   @content: ->
     @div tabIndex: -1, class: 'panel cli-status panel-bottom', =>
@@ -43,7 +45,8 @@ class CommandOutputView extends View
         # @progress outlet: 'cliProgressBar', max: '100', value: '0', style: 'width: 100%'
         # @div class: 'progress-bar progress-bar-striped active', role: 'progressbar', style: 'width: 45%', 'aria-valuenow':'45', 'aria-valuemin':'0', 'aria-valuemax':'100'
         @pre class: "terminal", outlet: "cliOutput"
-        @subview 'cmdEditor', new TextEditorView(mini: true, placeholderText: 'input your command here')
+        # @subview '@cmdEditor', new TextEditorView(mini: true, placeholderText: 'input your command here')
+
 
   localCommands:
     "ls": (state, args)->
@@ -73,7 +76,6 @@ class CommandOutputView extends View
         return null
       else
         file_path = state.getCwd() + '/' + file_name
-        state.rawMessage 'path := ' + file_path + '\n'
         fs.closeSync(fs.openSync(file_path, 'w'))
         state.delay () ->
           atom.workspaceView.open file_path
@@ -82,7 +84,7 @@ class CommandOutputView extends View
       filename = args[0]
       filepath = state.getCwd() + '/' + filename
       fs.unlinkSync(filepath)
-      return state.consoleLink(filepath)
+      return state.consoleLink filepath
     "memdump": (state, args) ->
       return state.getLocalCommandsMemdump()
     "?": (state, args) ->
@@ -98,12 +100,75 @@ class CommandOutputView extends View
       file_name = args[0]
       state.delay () ->
         atom.workspaceView.open (state.getCwd() + '/' + file_name)
-      return state.consoleLink(file_name)
+      return state.consoleLink file_name
     "link": (state, args) ->
       file_name = args[0]
-      return state.consoleLink(file_name)
+      return state.consoleLink file_name
     "l": (state, args) ->
-      return state.exec 'link', args, state
+      return state.exec 'link '+args[0], null, state
+    "info": (state, args) ->
+      state.clear()
+      state.showInitMessage true
+      return null
+
+  focusInputBox: () ->
+    if @currentInputBox?
+      @currentInputBox.find('.terminal-input').focus()
+
+  putInputBox: () ->
+    if @currentInputBoxTmr?
+      clearInterval @currentInputBoxTmr
+      @currentInputBoxTmr = null
+
+    @cliOutput.find('.cli-dynamic-input-box').remove()
+    prompt = @getCommandPrompt('')+" "
+    @currentInputBox = $('<div tyle="display:inline-block;" class="cli-dynamic-input-box">' + prompt + '<input class="terminal-input native-key-bindings" type="text" size="25" value=""></div>')
+    @currentInputBox.keypress (e) =>
+       code = e.keyCode or e.which
+       if code == 13
+         @onCommand()
+
+    ###
+    cursor = @currentInputBox.find '.cursor'
+    inputViewOrig = @currentInputBox.find '.terminal-input'
+    inputView = @currentInputBox.find '.terminal-input-view'
+    inputViewOrig.keyup () =>
+      inputView.text inputViewOrig.val()
+
+    @currentInputBoxTmr = null
+    @currentInputBox.click () =>
+      inputViewOrig.focus()
+      if not @currentInputBoxTmr?
+        @currentInputBoxTmr = window.setInterval () ->
+          if cursor.css('visibility') == 'visible'
+            cursor.css { visibility: 'hidden' }
+          else
+            cursor.css { visibility: 'visible' }
+        , 500
+
+    @currentInputBox.blur () =>
+      clearInterval @currentInputBoxTmr
+      @currentInputBoxTmr = null
+    ###
+
+    ###
+    @currentInputBox = (new TextEditorView(mini: true, placeholderText: 'input your command here'))
+    .removeClass()
+    .addClass 'cli-dynamic-input-box'
+    .addClass 'terminal-input'
+    .attr 'style', ''
+    .addClass 'terminal'
+    ###
+    # @currentInputBox = $('<editor--private mini></editor--private>')
+
+    @currentInputBox.appendTo @cliOutput
+    @focusInputBox()
+
+  readInputBox: () ->
+    ret = ''
+    if @currentInputBox?
+      ret = @currentInputBox.find('.terminal-input').val()
+    return ret
 
   init: () ->
     obj = require '../config/functional-commands-external'
@@ -344,12 +409,6 @@ class CommandOutputView extends View
   run: () ->
     @exec('run', null, this)
 
-  clear: () ->
-    @inputLine = 0
-    @cliOutput.empty()
-    @message '\n'
-    return @cmdEditor.setText ''
-
   isCommandEnabled: (name) ->
     disabledCommands = atom.config.get('atom-terminal-panel.disabledExtendedCommands')
     if name in disabledCommands
@@ -379,7 +438,6 @@ class CommandOutputView extends View
     return retString
 
   commandProgress: (value) ->
-    @rawMessage 'progress := '+value+'\n'
     #if value >= 100
     #  value = -1
     if value < 0
@@ -391,14 +449,31 @@ class CommandOutputView extends View
       # @cliProgressBar.fadeIn 500
       @cliProgressBar.attr('value', value/2)
 
-  showInitMessage: () ->
-    if @helloMessageShown
-      return
-    if atom.config.get 'atom-terminal-panel.enableConsoleStartupInfo'
+  showInitMessage: (forceShow=false) ->
+    if not forceShow
+      if @helloMessageShown
+        return
+    if atom.config.get 'atom-terminal-panel.enableConsoleStartupInfo' or forceShow
       hello_message = @consolePanel 'ATOM Terminal', 'Please enter new commands to the box below.<br>The console supports special anotattion like: %(path), %(file), %(link:file.something).<br>It also supports special HTML elements like: %(tooltip:A:content:B) and so on.<br>Hope you\'ll enjoy the terminal.'
       @rawMessage hello_message
       @helloMessageShown = true
     return this
+
+  onCommand: () ->
+    @inputLine++
+    inputCmd = @readInputBox()
+    inputCmd = @parseSpecialStringTemplate inputCmd
+
+    if @echoOn
+      @message ("\n"+@getCommandPrompt(inputCmd)+"\n")
+
+    ret = @exec inputCmd, null, this
+    if ret?
+      @message ret + '\n'
+
+    @scrollToBottom()
+    @putInputBox()
+    return null
 
   initialize: ->
 
@@ -412,73 +487,24 @@ class CommandOutputView extends View
       "cli-status:toggle-output": => @toggle()
 
     @on "core:confirm", =>
-      @cmdEditor.addClass 'readonly'
-      @inputLine++
-      inputCmd = @cmdEditor.getModel().getText()
-      inputCmd = @parseSpecialStringTemplate inputCmd
-
-      if @echoOn
-        @message ("\n"+@getCommandPrompt(inputCmd)+"\n")
-      @scrollToBottom()
-
-      ###
-      args = []
-      # support 'a b c' and "foo bar"
-      inputCmd.replace /("[^"]*"|'[^']*'|[^\s'"]+)/g, (s) =>
-        if s[0] != '"' and s[0] != "'"
-          s = s.replace /~/g, @userHome
-        args.push s
-      cmd = args.shift()
-      if atom.config.get('atom-terminal-panel.enableExtendedCommands')
-        if @isCommandEnabled(cmd)
-          action = null
-          if core.findUserCommand(cmd) != null
-            action = core.findUserCommand(cmd)
-          else
-            if @getLocalCommand(cmd) != null
-              action = @getLocalCommand(cmd)
-          if action?
-            if @echoOn
-              result = action(this, args)
-              if result?
-                @message result + '\n'
-            @cmdEditor.removeClass 'readonly'
-            return @cmdEditor.setText ''
-
-        # @commandProgress -1
-      # if cmd == 'cd'
-      #  return @cd args
-      # if cmd == 'ls' and atom.config.get('atom-terminal-panel.overrideLs')
-      #  return @ls args
-      # if cmd == 'clear'
-      #  return @clear()
-      ret = @spawn inputCmd, cmd, args
-      @cmdEditor.removeClass 'readonly'
-      return ret
-      ###
-
-
-      ret = @exec inputCmd, null, this
-      @cmdEditor.setText ''
-      @cmdEditor.removeClass 'readonly'
-      if ret?
-        @message ret + '\n'
-      return null
+      return @onCommand()
 
   clear: ->
     @cliOutput.empty()
     @message '\n'
-    return @cmdEditor.setText ''
+    @putInputBox()
+    # return @cmdEditor.setText ''
 
   adjustWindowHeight: ->
     maxHeight = atom.config.get('atom-terminal-panel.WindowHeight')
     @cliOutput.css("max-height", "#{maxHeight}px")
 
   showCmd: ->
-    @cmdEditor.show()
-    @cmdEditor.getModel().selectAll()
-    @cmdEditor.setText('') if atom.config.get('atom-terminal-panel.clearCommandInput')
-    @cmdEditor.focus()
+    # @cmdEditor.show()
+    # @cmdEditor.getModel().selectAll()
+    # @cmdEditor.setText('') if atom.config.get('atom-terminal-panel.clearCommandInput')
+    # @cmdEditor.focus()
+    @focusInputBox()
     @scrollToBottom()
 
   scrollToBottom: ->
@@ -518,11 +544,12 @@ class CommandOutputView extends View
     lastOpenedView = this
     @scrollToBottom()
     @statusView.setActiveCommandView this
-    @cmdEditor.focus()
+    @focusInputBox()
     @showInitMessage()
+    @putInputBox()
 
     if atom.config.get 'atom-terminal-panel.enableWindowAnimations'
-      @WindowMinHeight = @cliOutput.height() + @cmdEditor.height() + 50
+      @WindowMinHeight = @cliOutput.height() + 50
       @height 0
       @animate {
         height: @WindowMinHeight
@@ -532,7 +559,7 @@ class CommandOutputView extends View
 
   close: ->
     if atom.config.get 'atom-terminal-panel.enableWindowAnimations'
-      @WindowMinHeight = @cliOutput.height() + @cmdEditor.height() + 50
+      @WindowMinHeight = @cliOutput.height() + 50
       @height @WindowMinHeight
       @animate {
         height: 0
@@ -904,6 +931,8 @@ class CommandOutputView extends View
     removeClass @statusIcon, 'status-error'
     addClass @statusIcon, 'status-success'
     @parseSpecialNodes()
+    @scrollToBottom()
+    @putInputBox()
 
   errorMessage: (message) ->
     @cliOutput.append @parseMessage(message)
@@ -935,7 +964,7 @@ class CommandOutputView extends View
     return @correctFilePath cwd
 
   spawn: (inputCmd, cmd, args) ->
-    @cmdEditor.hide()
+    # @cmdEditor.hide()
     htmlStream = ansihtml()
     htmlStream.on 'data', (data) =>
       @message(data)

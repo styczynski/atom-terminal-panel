@@ -16,7 +16,7 @@ Fancy custom highlighting rules.
 
 ![A screenshot of atom-terminal-panel package](https://raw.githubusercontent.com/isis97/atom-terminal-panel/master/static/example3.gif)
 
-Cutom highlighting and few commands:
+Cutom highlighting and few commands (old version):
 
 ![A screenshot of atom-terminal-panel package](https://raw.githubusercontent.com/isis97/atom-terminal-panel/master/static/example2.gif)
 
@@ -132,8 +132,9 @@ The REGEXP will be replaced with REPLACEMENT and all the line with matched token
 You can use special annotation (on commands/rules definitions or in settings - command prompt message/current file path replacement) which is really powerful:
 
 * `%(path) or %(cwd)` - refers to the current working directory path
-* `%(file)` - refers to the current file
+* `%(file)` - refers to the current file (its value depends on the usage context - you'll note :) )
 * `%(line)` - refers to the input command number
+* `%(command)` - refers to the lastly used command (experimental, may be broken)
 * `%(link:FILEPATH)` - creates an interactive link for the given filepath
 * `%(day)/%(month)/%(year)/%(hours)/%(minutes)/%(milis)` - refers to the current time
 * `%(disc)` - refers to the current file disc location name
@@ -141,9 +142,10 @@ You can use special annotation (on commands/rules definitions or in settings - c
 * `%(path:-1)/%(path:-2)/%(path:-3)...` - refers to the current file component (numerated from the end) -     (path:-1 is the last path component)
 * `%(tooltip:CASUAL TEXT:content:TOOLTIP CONTENT)` - generates new tooltip component (TEXT and TOOLTIP cannot contain any special characters like brackets)
 * `%(label:TYPE:TEXT)` - creates new label (TYPE can be error, danger, warning, default, info, badge)
-* `%(0), %(1), %(2)...` - refers to the passed arguments (ONLY USER COMMANDS)
-* `%(*)` - refers to the all passed arguments (concatenated arguments list) (ONLY USER COMMANDS)
-* `%(^)` - refers to the command string (command with all arguments) (ONLY USER COMMANDS)
+* `%(0), %(1), %(2)...` - refers to the passed arguments
+* `%(0), %(1), %(2)...` - also refers to the capture groups in user defined colouring rules
+* `%(*)` - refers to the all passed arguments (concatenated arguments list) (can be used only in user commands definitions)
+* `%(^)` - refers to the command string (command with all arguments) (can be used only in user commands definitions)
 
 
 ## Internally defined commands
@@ -153,6 +155,7 @@ Here the list of all commands:
 
 * `ls`
 * `new FILENAME` - creates new empty file in current working directory and opens it instantly in editor view
+* `edit FILENAME` - opens a given file in editor
 * `link FILENAME` - creates new file link (you can use it to open a file)
 * `rm FILENAME` - removes file in current working directory
 * `memdump` or `?` - prints information about all loaded commands
@@ -239,8 +242,16 @@ You can also call other useful console methods:
 * `` ` `` - toggle terminal
 * `escape` (in focused input box) - close terminal
 
+## TODO
+
+* Make a more cool terminal cursor.
+* More interactive stuff
+* Maybe a little bash parser written in javascript?
+* Some about stdinput (which is really bad)
+
 ## Changelog
 
+* v4.0.14 - New better console "input box" - now it looks more like a serious console; made some repairs.
 * v4.0.13 - Repaired another mass of bugs, added config descriptions, repaired exec function mechanics.
 * v4.0.11 - Repaired a mass of bugs :/
 * v4.0.7 - Added slide terminal animation (use backtick key trigger for better experience :) )
