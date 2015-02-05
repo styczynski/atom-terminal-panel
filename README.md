@@ -35,8 +35,6 @@ Cutom highlighting and few commands:
 ## Terminal-commands.json
 The `terminal-commands.json` is the main config file for this package. If it's not present (or the JSON syntax is invalid) a new config file is created (in folder .atom).
 
-IF YOU HAVEN'T GOT terminal-commands.json FILE IN YOUR ./atom DIRECTORY PLEASE EXECUTE `update` COMMAND!
-
 The config file contains:
 
 * custom commands definitions
@@ -243,6 +241,7 @@ You can also call other useful console methods:
 
 ## Changelog
 
+* v4.0.13 - Repaired another mass of bugs, added config descriptions, repaired exec function mechanics.
 * v4.0.11 - Repaired a mass of bugs :/
 * v4.0.7 - Added slide terminal animation (use backtick key trigger for better experience :) )
 

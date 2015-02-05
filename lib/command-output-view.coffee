@@ -58,7 +58,8 @@ class CommandOutputView extends View
     "echo": (state, args)->
       if args?
         state.message args.join(' ') + '\n'
-      state.message '\n'
+      else
+        state.message '\n'
       return null
     "print": (state, args)-> return JSON.stringify(args)
     "cd": (state, args)-> state.cd args
@@ -307,7 +308,11 @@ class CommandOutputView extends View
           s = s.replace /~/g, @userHome
         args.push s
       cmd = args.shift()
-      command = core.findUserCommand(cmd)
+
+
+      command = null
+      if @isCommandEnabled(cmd)
+        command = core.findUserCommand(cmd)
       if command?
         if not state?
           ret = null
@@ -318,7 +323,9 @@ class CommandOutputView extends View
           return null
         return ret
       else
-        command = @getLocalCommand(cmd)
+        if atom.config.get('atom-terminal-panel.enableExtendedCommands')
+          if @isCommandEnabled(cmd)
+            command = @getLocalCommand(cmd)
         if command?
           ret = command(state, args)
           if not ret?
