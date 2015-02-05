@@ -243,4 +243,68 @@ You can also call other useful console methods:
 
 ## Changelog
 
+* v4.0.11 - Repaired a mass of bugs :/
 * v4.0.7 - Added slide terminal animation (use backtick key trigger for better experience :) )
+
+
+## Example configuration
+
+Here it is, the example configuration (terminal-commands.json) - that you can see on the preview images.
+To use it just copy it to your ./atom/terminal-commands.json file (if the file doesn't exist call `update` command and it should be created).
+
+The regex rules preview can be easily checked by invoking `echo` command (e.g. `echo warn test warning messages.`).
+
+Note that after each config update you must call `update` command otherwise changes will take no effects.
+
+```json
+{
+  "commands": {
+    "hello_world":
+      [
+        "echo Hello world :D",
+        "echo %(*)","echo is",
+        "echo example usage",
+        "echo of the console"
+      ]
+  },
+  "rules": {
+      "(error|err):? (.*)": {
+          "match": {
+            "matchLine": "true",
+            "replace": "%(label:error:text:Error) %(0)"
+          },
+          "css": {
+            "color": "red",
+            "font-weight": "bold"
+          }
+      },
+      "(warning|warn|alert):? (.*)": {
+          "match": {
+            "matchLine": "true",
+            "replace": "%(label:warning:text:Warning) %(0)"
+          },
+          "css": {
+            "color": "yellow"
+          }
+      },
+      "(note|info):? (.*)": {
+          "match": {
+            "matchLine": "true",
+            "replace": "%(label:info:text:Info) %(0)"
+          },
+          "css": {
+
+          }
+      },
+      "(debug|dbg):? (.*)": {
+          "match": {
+            "matchLine": "true",
+            "replace": "%(label:default:text:Debug) %(0)"
+          },
+          "css": {
+            "color": "gray"
+          }
+      }
+  }
+}
+```
