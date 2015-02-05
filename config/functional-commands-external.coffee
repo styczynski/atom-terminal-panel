@@ -12,12 +12,12 @@ module.exports =
     TARGET_FILE = state.replaceAll '.cpp', '', TARGET_FILE
     TARGET_FILE = state.replaceAll '.c', '', TARGET_FILE
     ADDITIONAL_FLAGS = ""
-    return state.exec("#{COMPILER_NAME} #{COMPILER_FLAGS} \"#{SOURCE_FILE}\" -o \"#{TARGET_FILE}\" #{ADDITIONAL_FLAGS}")
+    return state.exec "#{COMPILER_NAME} #{COMPILER_FLAGS} \"#{SOURCE_FILE}\" -o \"#{TARGET_FILE}\" #{ADDITIONAL_FLAGS}", args, state
 
   "run": (state, args) ->
     SOURCE_FILE = state.getCurrentFilePath()
     TARGET_FILE = "#{SOURCE_FILE}.exe"
-    return state.exec("\"#{TARGET_FILE}\"");
+    return state.exec "\"#{TARGET_FILE}\"", args, state
 
   "test": (state, args) ->
     test_file = args[0]
