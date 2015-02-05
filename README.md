@@ -214,6 +214,22 @@ color: red;
 font-weight: bold;
 ```
 
+## More about console
+
+As you can see in previous examples we were calling `state.exec`.
+This method accepts tree parametes:
+`command`, `args_reference`, `state`
+`command` is the string command to be executed e.g. `echo test` or `format C:`
+`args_reference` is the array containing all reference arguments e.g. if you passes a ['arg0', 'arg1'] as parameter the `%(0)` sequence will be replaced with `arg0` text and `%(1)` with `arg1`. If this paramter is undefined or null the command is executed normally and the `%(0)` sequences are simply removed.
+`state` - the console view object e.g. `state.exec 'echo test > test.txt', null, state`
+
+You can also call other useful console methods:
+* `state.message 'MESSAGE'` - displays a message (can contains css/html formatting)
+* `state.rawMessage 'MESSAGE'` - displays a message without parsing special sequences like `%(link:...)` or `%(cwd)` etc.
+* `state.clear` - clears console output
+* `state.consoleLink 'FILENAME'` - creates console link to a given file (returns text which will be replaced with interactive file link)
+* `state.consoleLabel 'TYPE', 'TEXT'` - creates console label just like `%(label:TYPE:text:TEXT)`
+
 ## Hotkeys
 
 * `shift-enter` toggle current terminal
