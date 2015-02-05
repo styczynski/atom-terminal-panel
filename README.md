@@ -35,6 +35,8 @@ Cutom highlighting and few commands:
 ## Terminal-commands.json
 The `terminal-commands.json` is the main config file for this package. If it's not present (or the JSON syntax is invalid) a new config file is created (in folder .atom).
 
+IF YOU HAVEN'T GOT terminal-commands.json FILE IN YOUR ./atom DIRECTORY PLEASE EXECUTE `update` COMMAND!
+
 The config file contains:
 
 * custom commands definitions

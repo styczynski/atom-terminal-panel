@@ -21,7 +21,7 @@ class CliCore
   createDefaultCommandsFile: () ->
     if atom.config.get('atom-terminal-panel.enableUserCommands')
       try
-        content = JSON.stringify {commands: @state.defaultCommands}
+        content = JSON.stringify {commands: @state.defaultCommands, rules: {}}
         fs.writeFileSync @state.statePath, content
       catch e
         console.log 'cli-core cannot create default terminal commands JSON file', e.message

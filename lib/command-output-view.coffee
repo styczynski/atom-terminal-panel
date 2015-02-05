@@ -57,8 +57,9 @@ class CommandOutputView extends View
       return null
     "echo": (state, args)->
       if args?
-        return args.join(' ') + '\n'
-      return '\n'
+        state.message args.join(' ') + '\n'
+      state.message '\n'
+      return null
     "print": (state, args)-> return JSON.stringify(args)
     "cd": (state, args)-> state.cd args
     "new": (state, args) ->
