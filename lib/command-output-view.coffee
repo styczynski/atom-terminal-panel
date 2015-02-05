@@ -84,7 +84,7 @@ class CommandOutputView extends View
     "memdump": (state, args) ->
       return state.getLocalCommandsMemdump()
     "?": (state, args) ->
-      return state.exec 'memdump', state, args
+      return state.exec 'memdump', null, state
     "exit": (state, args) ->
       state.destroy()
     "update": (state, args) ->
@@ -258,87 +258,76 @@ class CommandOutputView extends View
       return null
     return file?.path
 
+  parseTemplate: (text, vars) ->
+    ret = @parseSpecialStringTemplate text, vars
+    ret = @replaceAll '%(file-original)', @getCurrentFilePath(), ret
+    ret = @replaceAll '%(cwd-original)', @getCwd(), ret
+    return ret
 
-  exec: (cmd, args, state, disableEcho=true, oArgs=null) ->
+  parseExecToken__: (cmd, args, strArgs) ->
+    cmd = @parseTemplate cmd, {file:@getCurrentFilePath()}
+    if strArgs?
+      cmd = @replaceAll "%(*)", strArgs, cmd
+    cmd = @replaceAll "%(^)", (@replaceAll "%(^)", "", cmd), cmd
+    if args?
+      argsNum = args.length
+      for i in [0..argsNum] by 1
+        if args[i]?
+          v = args[i].replace /\n/ig, ''
+          cmd = @replaceAll "%(#{i})", args[i], cmd
+      for i in [argsNum+1..100] by 1
+        cmd = @replaceAll "%(#{i})", '', cmd
+    return cmd
 
-    strArgs = ''
-    if oArgs?
-      if oArgs instanceof String
-        strArgs = oArgs
 
-    if not cmd?
-      return null
+  exec: (cmdStr, ref_args, state) ->
+    # @rawMessage "Call cmd={#{cmdStr}}; ref_args={#{ref_args}};\n"
 
-    if not args?
-      args = []
-
-    if args instanceof String
-      strArgs = args
-      args = []
-      cmd.replace /("[^"]*"|'[^']*'|[^\s'"]+)/g, (s) =>
-      if s[0] != '"' and s[0] != "'"
-        s = s.replace /~/g, @userHome
-      args.push s
-    else
-      strArgs = ''
-      for i in args
-        strArgs += i + ' '
-
-    # @message "$exec[#{cmd}]\n"
-    if cmd instanceof Array
-      # @commandProgress 0
-      @echoOn = false
+    if cmdStr instanceof Array
       ret = ''
-      pr = 100.0/cmd.length
-      pri = 0
-      for com in cmd
-        ++pri
-        val = @exec com, args, state, false, strArgs
-        # @commandProgress pr*pri
+      for com in cmdStr
+        # com = @parseExecToken__ com, ref_args, ref_args.join(' ')
+        val = @exec com, ref_args, state
         if val?
           ret += val
-      @echoOn = true
-      if not ret?
-        return null
-      # @commandProgress 100
-      return ret
-
-    cmd = @replaceAll "%(*)", strArgs, cmd
-    cmd = @replaceAll "%(^)", (@replaceAll "%(^)", "", cmd), cmd
-    argsNum = args.length - 1
-    for i in [0..argsNum] by 1
-      if args[i] instanceof String
-        v = args[i].replace /\n/ig, ''
-        cmd = @replaceAll "%(#{i})", v, cmd
-    for i in [argsNum+1..100] by 1
-      cmd = @replaceAll "%(#{i})", '', cmd
-
-    if disableEcho
-      @echoOn = false
-    command = core.findUserCommand(cmd)
-    if not command?
-      command = @getLocalCommand(cmd)
-
-    if command?
-      if not state?
-        ret = null
-        throw 'The console functional (not native) command cannot be executed without caller information: \''+cmd+'\'.'
-      if command?
-        ret = command(state, args)
-      @echoOn = true
       if not ret?
         return null
       return ret
     else
-      inputCmd = cmd
+      ref_args_str = null
+      if ref_args?
+        ref_args_str = ref_args.join(' ')
+      cmdStr = @parseExecToken__ cmdStr, ref_args, ref_args_str
+
+      args = []
+      cmd = cmdStr
+      cmd.replace /("[^"]*"|'[^']*'|[^\s'"]+)/g, (s) =>
+        if s[0] != '"' and s[0] != "'"
+          s = s.replace /~/g, @userHome
+        args.push s
       cmd = args.shift()
-      @spawn inputCmd, cmd, args
-      if disableEcho
-        @echoOn = true
-      if not cmd?
-        return null
-      return cmd
-    return null
+      command = core.findUserCommand(cmd)
+      if command?
+        if not state?
+          ret = null
+          throw 'The console functional (not native) command cannot be executed without caller information: \''+cmd+'\'.'
+        if command?
+          ret = command(state, args)
+        if not ret?
+          return null
+        return ret
+      else
+        command = @getLocalCommand(cmd)
+        if command?
+          ret = command(state, args)
+          if not ret?
+            return null
+          return ret
+        else
+          @spawn cmdStr, cmd, args
+          if not cmd?
+            return null
+          return 'call '+cmd
 
   compile: () ->
     @clear()
@@ -423,6 +412,8 @@ class CommandOutputView extends View
       if @echoOn
         @message ("\n"+@getCommandPrompt(inputCmd)+"\n")
       @scrollToBottom()
+
+      ###
       args = []
       # support 'a b c' and "foo bar"
       inputCmd.replace /("[^"]*"|'[^']*'|[^\s'"]+)/g, (s) =>
@@ -456,6 +447,15 @@ class CommandOutputView extends View
       ret = @spawn inputCmd, cmd, args
       @cmdEditor.removeClass 'readonly'
       return ret
+      ###
+
+
+      ret = @exec inputCmd, null, this
+      @cmdEditor.setText ''
+      @cmdEditor.removeClass 'readonly'
+      if ret?
+        @message ret + '\n'
+      return null
 
   clear: ->
     @cliOutput.empty()

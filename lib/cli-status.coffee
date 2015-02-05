@@ -79,16 +79,16 @@ module.exports =
     'commandPrompt':
       title: 'The command prompt message.'
       type: 'string'
-      default: '$> %command%'
+      default: '%(label:badge:text:%(line)) %(hours):%(minutes) $.../%(path:-2)/%(path:-1)>'
     'textReplacementCurrentPath':
       title: 'Replacement for the current working directory path at the console output.'
       type: 'string'
-      default: ''
+      default: '[CWD]'
     'textReplacementCurrentFile':
       title: 'Replacement for the currently edited file at the console output.'
       type: 'string'
-      default: ''
+      default: '%(link:%(file))'
     'textReplacementFileAdress':
       title: 'Replacement for any file adress at the console output.'
       type: 'string'
-      default: ''
+      default: '%(link:%(file))'

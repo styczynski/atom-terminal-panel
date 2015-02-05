@@ -76,6 +76,28 @@ Each command is defined the following way:
 "name": [ "command0", "command1", "command2"]
 ```
 'command0', 'command1'... are the commands that will be invoked by the user entry.
+Example involving `g++` usage:
+```json
+"build": [
+  "echo Compiling %(file) using g++ Please wait...",
+  "g++ \"%(file)\" -o \"%(file).runnable\"",
+  "echo Compilation finished %(file)."
+]
+```
+As you can see you are able to build the current C/C++ project using only a single command.
+You may also try creating a build command accepting single file path (simple source file path) and
+the auto_build command, which will execute build command with `%(file)` parameter.
+E.g.
+```json
+"build": [
+  "echo Compiling %(0) using g++ Please wait...",
+  "g++ %(0) -o %(0).runnable",
+  "echo Compilation finished %(0)."
+],
+"auto_build": [
+  "build \"%(file)\""
+]
+```
 
 ### Defining custom rules
 
@@ -102,30 +124,54 @@ Or more complex (and also more powerful) way:
     }
   }
 ```
+
 The REGEXP will be replaced with REPLACEMENT and all the line with matched token will be colored to red(matchLine=true).
 
 ### Special annotation
 
 You can use special annotation (on commands/rules definitions or in settings - command prompt message/current file path replacement) which is really powerful:
 
-* %(path) or %(cwd) - refers to the current working directory path
-* %(file) - refers to the current file
-* %(line) - refers to the input command number
-* %(link:FILEPATH) - creates an interactive link for the given filepath
-* %(day)/%(month)/%(year)/%(hours)/%(minutes)/%(milis) - refers to the current time
-* %(disc) - refers to the current file disc location name
-* %(path:0)/%(path:1)/%(path:2)... - refers to the current file path component (path:0 is a disc name)
-* %(path:-1)/%(path:-2)/%(path:-3)... - refers to the current file component (numerated from the end) -     (path:-1 is the last path component)
-* %(tooltip:CASUAL TEXT:content:TOOLTIP CONTENT) - generates new tooltip component (TEXT and TOOLTIP cannot contain any special characters like brackets)
-* %(label:TYPE:TEXT) - creates new label (TYPE can be error, danger, warning, default, info, badge)
-* %(0), %(1), %(2)... - refers to the passed arguments (ONLY USER COMMANDS)
-* %(*) - refers to the all passed arguments (concatenated arguments list) (ONLY USER COMMANDS)
-* %(^) - refers to the command string (command with all arguments) (ONLY USER COMMANDS)
+* `%(path) or %(cwd)` - refers to the current working directory path
+* `%(file)` - refers to the current file
+* `%(line)` - refers to the input command number
+* `%(link:FILEPATH)` - creates an interactive link for the given filepath
+* `%(day)/%(month)/%(year)/%(hours)/%(minutes)/%(milis)` - refers to the current time
+* `%(disc)` - refers to the current file disc location name
+* `%(path:0)/%(path:1)/%(path:2)...` - refers to the current file path component (path:0 is a disc name)
+* `%(path:-1)/%(path:-2)/%(path:-3)...` - refers to the current file component (numerated from the end) -     (path:-1 is the last path component)
+* `%(tooltip:CASUAL TEXT:content:TOOLTIP CONTENT)` - generates new tooltip component (TEXT and TOOLTIP cannot contain any special characters like brackets)
+* `%(label:TYPE:TEXT)` - creates new label (TYPE can be error, danger, warning, default, info, badge)
+* `%(0), %(1), %(2)...` - refers to the passed arguments (ONLY USER COMMANDS)
+* `%(*)` - refers to the all passed arguments (concatenated arguments list) (ONLY USER COMMANDS)
+* `%(^)` - refers to the command string (command with all arguments) (ONLY USER COMMANDS)
+
+
+## Internally defined commands
+
+You can take advantage of commands like `memdump` which prints information about all plugin loaded commands.
+Here the list of all commands:
+
+* `ls`
+* `new FILENAME` - creates new empty file in current working directory and opens it instantly in editor view
+* `link FILENAME` - creates new file link (you can use it to open a file)
+* `rm FILENAME` - removes file in current working directory
+* `memdump` or `?` - prints information about all loaded commands
+* `clear` - clears console output
+* `cd` - moves to a given path
+* `update` - reloads plugin config (terminal-commands.json)
+* `reload` - reloads atom window
+
+Included example commands:
+
+* `compile` - compiles current file using g++
+* `run` - runs the previously compiled file
+* `test FILENAME` - runs the test on the compiled application FILENAME is a FILE0.in file and the compiled application name must be FILE.exe e.g. `test test5.in` means `test.exe < test5.in`
 
 ### Internal configuration
 
 You can modify the extensions.less file and add your own extension colouring rules.
 E.g:
+
 ```less
   .txt {
     color: hsl(185, 0.5, 0.5);
@@ -135,6 +181,7 @@ E.g:
     color: red;
   }
 ```
+
 Simple like making a cup of fresh coffee...
 Just dot, extension name and CSS formatting.
 
@@ -142,18 +189,18 @@ The ./config/functional-commands-external.coffee file contains the external func
 E.g.
 ```coffeescript
 "hello_world": (state, args)->
-  return 'Hello world'
+  return "Hello world"
 ```
 The state is the terminal view object and the args - the array of all passesd parameters.
 Your custom functional command can also create console links using ```state.consoleLink path```, labels using ```state.consoleLabel type, text``` or execute other commands:
 E.g.
 ```coffeescript
 "call_another": (state, args)->
-  return state.exec 'echo Hello world', state, args
+  return state.exec "echo Hello world", state, args
 ```
 But if you're using ```state.exec``` you must remember about passing not only command string but also state and args parameters.
 As you can see all terminal messages are displayed automatically (just return the string message). but you can also print them manually:
-```coffeescript
+``` coffeescript
 "hello_world": (state, args)->
   state.message 'Hello world'
   return 'Second string hue hue :)'
@@ -161,7 +208,7 @@ As you can see all terminal messages are displayed automatically (just return th
 
 The ./config/terminal-style.less contains the general terminal stylesheet:
 E.g.
-```less
+``` less
 background-color: rgb(12, 12, 12);
 color: red;
 font-weight: bold;
