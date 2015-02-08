@@ -2,9 +2,17 @@ atom-terminal-panel
 ==============
 
 (a fork of super-awesome atom package - thedaniel/terminal-panel)
+Plugin for ATOM Editor.
 
 ![A screenshot of atom-terminal-panel package](https://raw.githubusercontent.com/isis97/atom-terminal-panel/master/static/example_small.gif)
 
+## Development
+
+This project is in alpha stage.
+Please contribute this project if you liked it.
+All the help is welcome.
+Feel free to propose new feautures, modify existing code, report issues.
+Thank you.
 
 ## Usage
 Just press `shift-enter` or just `` ` `` (backtick) and enjoy your cool ATOM terminal :D
