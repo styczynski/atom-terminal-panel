@@ -11,7 +11,7 @@ Just press `shift-enter` or just `` ` `` (backtick) and enjoy your cool ATOM ter
 
 ## Screenshot
 
-Terminal with fancy file links and interative interface.
+Terminal with fancy file links and interactive interface.
 
 ![A screenshot of atom-terminal-panel package](https://raw.githubusercontent.com/isis97/atom-terminal-panel/master/static/example.gif)
 
@@ -19,11 +19,11 @@ Fancy custom highlighting rules.
 
 ![A screenshot of atom-terminal-panel package](https://raw.githubusercontent.com/isis97/atom-terminal-panel/master/static/example3.gif)
 
-Cutom highlighting and few commands (old version):
+Custom highlighting and few commands (old version):
 
 ![A screenshot of atom-terminal-panel package](https://raw.githubusercontent.com/isis97/atom-terminal-panel/master/static/example2.gif)
 
-There's also nice looking ease-to-use command finder dialog (just to search your custom commands and terminal build-ins):
+There's also nice looking easy-to-use command finder dialog (just to search your custom commands and terminal build-ins):
 
 ![A screenshot of atom-terminal-panel package](https://raw.githubusercontent.com/isis97/atom-terminal-panel/master/static/example_command_finder.png)
 
@@ -52,7 +52,7 @@ There's also nice looking ease-to-use command finder dialog (just to search your
   * Now you can quickly access your command just by pressing one button!
 
 ## Terminal-commands.json
-The `terminal-commands.json` is the main config file for this package. If it's not present (or the JSON syntax is invalid) a new config file is created (in folder .atom).
+The `terminal-commands.json` is the main configuration file for this package. If it's not present (or the JSON syntax is invalid) a new config file is created (in folder .atom).
 
 The config file contains:
 
@@ -89,7 +89,7 @@ The sample config file can look like:
 }
 ```
 
-The above config will create highlight rule for all lines containing "warning: " text (this lines will be colored yellow).
+The above configuration file will create highlight rule for all lines containing "warning: " text (this lines will be colored yellow).
 
 ### Creating custom terminal shortcuts
 
@@ -167,7 +167,7 @@ E.g.
 
 ### Defining custom rules
 
-The highligh rules that are placed in `rules` property can be defined using two methods.
+The highlight rules that are placed in `rules` property can be defined using two methods.
 The simple way looks like:
 ```json
   "regexp" : {
@@ -215,7 +215,7 @@ You can use special annotation (on commands/rules definitions or in settings - c
 * `%(line)` - refers to the input command number
 * `%(env.PROPERTY)` - refers to the node.js environmental variable called PROPERTY (to get the list of all available properties type `%(env.*)` into the terminal)[See node.js process_env](http://nodejs.org/api/process.html#process_process_env)
 * `%(command)` - refers to the lastly used command (experimental, may be broken)
-* `%(link:FILEPATH)` - creates an interactive link for the given filepath
+* `%(link)FILEPATH%(endlink)` - creates an interactive link for the given filepath
 * `%(day)/%(month)/%(year)/%(hours)/%(minutes)/%(seconds)/%(milis)` - refers to the current time
 * `%(hours12)/%(ampm)/%(AMPM)` - special variables used for 12-hours time format
 * `%(.day)/%(.month)/%(.year)/%(.hours)/%(.minutes)/%(.seconds)/%(.milis)/%(.hours12)` - refers to the current time (values without leading zeros)
@@ -238,7 +238,7 @@ Please use the `%(^...)` modifiers to format the text:
 * `%(^)` - ends the text formatting
 * `%(^#000000)` - colors the text with the hex color
 * `%(^b) or %(^bold)` - creates bold text
-* `%(^i) or %(^italic)` - creates italic text
+* `%(^i) or %(^italic)` - creates text in italics
 * `%(^u) or %(^underline)` - creates underlined text
 * `%(^l) or %(^line-through)` - creates line trough the text
 
@@ -327,7 +327,7 @@ This method accepts tree parametes:
 
 You can also call other useful console methods:
 * `state.message 'MESSAGE'` - displays a message (can contains css/html formatting)
-* `state.rawMessage 'MESSAGE'` - displays a message without parsing special sequences like `%(link:...)` or `%(cwd)` etc.
+* `state.rawMessage 'MESSAGE'` - displays a message without parsing special sequences like `%(link)...%(endlink)` or `%(cwd)` etc.
 * `state.clear` - clears console output
 * `state.consoleLink 'FILENAME'` - creates console link to a given file (returns text which will be replaced with interactive file link)
 * `state.consoleLabel 'TYPE', 'TEXT'` - creates console label just like `%(label:TYPE:text:TEXT)`
