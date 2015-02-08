@@ -3,6 +3,9 @@ atom-terminal-panel
 
 (a fork of super-awesome atom package - thedaniel/terminal-panel)
 
+![A screenshot of atom-terminal-panel package](https://raw.githubusercontent.com/isis97/atom-terminal-panel/master/static/example_small.gif)
+
+
 ## Usage
 Just press `shift-enter` or just `` ` `` (backtick) and enjoy your cool ATOM terminal :D
 
@@ -19,6 +22,11 @@ Fancy custom highlighting rules.
 Cutom highlighting and few commands (old version):
 
 ![A screenshot of atom-terminal-panel package](https://raw.githubusercontent.com/isis97/atom-terminal-panel/master/static/example2.gif)
+
+There's also nice looking ease-to-use command finder dialog (just to search your custom commands and terminal build-ins):
+
+![A screenshot of atom-terminal-panel package](https://raw.githubusercontent.com/isis97/atom-terminal-panel/master/static/example_command_finder.png)
+
 
 ## Feature
 
