@@ -4,6 +4,7 @@
 // for a full listing of what's available.
 @import "ui-variables";
 
+
 .terminal-input {
   background-color: transparent;
   border: none;
@@ -20,14 +21,18 @@
     white-space: pre;
     word-wrap: break-word;
     font-size: 14px;
-    font-family: monospace;
+    font-family: "Lucida Console";
   }
+
   .panel-heading {
     // margin: 1px;
     padding: 2px;
     text-align: right;
     .btn {
       top: 0px;
+    }
+    .button-settings {
+      float: left;
     }
   }
 
@@ -94,6 +99,6 @@
     color: hsl(0, 1, 0.5);
   }
   .icon-terminal, .icon-plus {
-      cursor: pointer;
+    cursor: pointer;
   }
 }

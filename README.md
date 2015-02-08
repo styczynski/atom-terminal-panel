@@ -45,14 +45,18 @@ The sample config file can look like:
 ```json
 {
   "commands": {
-    "hello": [
-      "echo Hello world :D",
-      "echo This = %(*)",
-      "echo is",
-      "echo example usage",
-      "echo of the console"
-    ]
+    "hello": {
+      "description": "Some description",
+      "command": [
+        "echo Hello world :D",
+        "echo This = %(*)",
+        "echo is",
+        "echo example usage",
+        "echo of the console"
+      ]
+    }
   },
+  "toolbar": [],
   "rules": {
     "warning: (.*)" : {
       "match": {
@@ -68,40 +72,83 @@ The sample config file can look like:
 
 The above config will create highlight rule for all lines containing "warning: " text (this lines will be colored yellow).
 
+### Creating custom terminal shortcuts
+
+You can create your own shortcuts buttons, which are placed on the terminal toolbar.
+To do it just put a new entry in the `toolbar` property:
+```json
+toolbar: [
+  ["SHORTCUT NAME", "COMMAND TO BE EXECUTED"]
+]
+```
+
+E.g. creating a button, which displays all avaliable terminal bultin commands:
+```json
+toolbar: [
+  [ "Display all commands", "memdump" ]
+]
+```
+
+Another example. Now the button will move the terminal to the C: directory:
+```json
+toolbar: [
+  ["C:", "cd C:\\"]
+]
+```
+
+You can add also tooltips describing the button functions:
+```json
+toolbar: [
+  ["C:", "cd C:\\", "Moves the terminal to the C:\\ directory."]
+]
+```
+
 ### Defining custom commands
 
-Each command is defined the following way:
+Each command is defined in the `commands` entry the following way:
 
 ```json
-"name": [ "command0", "command1", "command2"]
+"name": {
+  "description": "Simple description shown in command view (activated by memdump or ?)",
+  "command": ["command0", "command1", "command2"]
+}
 ```
 'command0', 'command1'... are the commands that will be invoked by the user entry.
 Example involving `g++` usage:
 ```json
-"build": [
-  "echo Compiling %(file) using g++ Please wait...",
-  "g++ \"%(file)\" -o \"%(file).runnable\"",
-  "echo Compilation finished %(file)."
-]
+"build": {
+  "description": "Build C/C++ application.",
+  "command": [
+    "echo Compiling %(file) using g++ Please wait...",
+    "g++ \"%(file)\" -o \"%(file).runnable\"",
+    "echo Compilation finished %(file)."
+  ]
+}
 ```
 As you can see you are able to build the current C/C++ project using only a single command.
 You may also try creating a build command accepting single file path (simple source file path) and
 the auto_build command, which will execute build command with `%(file)` parameter.
 E.g.
 ```json
-"build": [
-  "echo Compiling %(0) using g++ Please wait...",
-  "g++ %(0) -o %(0).runnable",
-  "echo Compilation finished %(0)."
-],
-"auto_build": [
-  "build \"%(file)\""
-]
+"build": {
+  "description": "Build C/C++ application.",
+  "command": [
+    "echo Compiling %(0) using g++ Please wait...",
+    "g++ %(0) -o %(0).runnable",
+    "echo Compilation finished %(0)."
+  ]
+},
+"auto_build": {
+  "description": "Automatically build C/C++ application.",
+  "command": [
+    "build \"%(file)\""
+  ]
+}
 ```
 
 ### Defining custom rules
 
-The highligh rules can be defined using two methods.
+The highligh rules that are placed in `rules` property can be defined using two methods.
 The simple way looks like:
 ```json
   "regexp" : {
@@ -125,18 +172,35 @@ Or more complex (and also more powerful) way:
   }
 ```
 
-The REGEXP will be replaced with REPLACEMENT and all the line with matched token will be colored to red(matchLine=true).
+The REGEXP will be replaced with REPLACEMENT and all the line with matched token will be colored to red(matchLine:true).
+
+### More about regex rules
+
+You can use the following properties in regex matches:
+
+* `matchLine` - bool value specifies if the regex should be applied to the whole line
+* `matchNextLines` - integer value specifies how many lines after the line containing current match should be also matched
+* `replace` - text that the match will be replaced with
 
 ### Special annotation
 
 You can use special annotation (on commands/rules definitions or in settings - command prompt message/current file path replacement) which is really powerful:
 
+* `%(username) or %(user)` - refers to the currently logged user
+* `%(computer-name) or %(hostname)` - refers to the currently used computer name
+* `%(home)` - refers to the current user home directory (experimental, may be broken sometimes)
 * `%(path) or %(cwd)` - refers to the current working directory path
+* `%(atom)` - refers to the atom directory
 * `%(file)` - refers to the current file (its value depends on the usage context - you'll note :) )
+* `%(editor.file)/%(editor.path)/%(editor.name)` - refers to the file currenly opened in the editor (full path/directory/file name)
 * `%(line)` - refers to the input command number
+* `%(env.PROPERTY)` - refers to the node.js environmental variable called PROPERTY (to get the list of all available properties type `%(env.*)` into the terminal)[See node.js process_env](http://nodejs.org/api/process.html#process_process_env)
 * `%(command)` - refers to the lastly used command (experimental, may be broken)
 * `%(link:FILEPATH)` - creates an interactive link for the given filepath
-* `%(day)/%(month)/%(year)/%(hours)/%(minutes)/%(milis)` - refers to the current time
+* `%(day)/%(month)/%(year)/%(hours)/%(minutes)/%(seconds)/%(milis)` - refers to the current time
+* `%(hours12)/%(ampm)/%(AMPM)` - special variables used for 12-hours time format
+* `%(.day)/%(.month)/%(.year)/%(.hours)/%(.minutes)/%(.seconds)/%(.milis)/%(.hours12)` - refers to the current time (values without leading zeros)
+* `%(^...)` - text formatting modifiers (see text formatting)
 * `%(disc)` - refers to the current file disc location name
 * `%(path:0)/%(path:1)/%(path:2)...` - refers to the current file path component (path:0 is a disc name)
 * `%(path:-1)/%(path:-2)/%(path:-3)...` - refers to the current file component (numerated from the end) -     (path:-1 is the last path component)
@@ -147,6 +211,22 @@ You can use special annotation (on commands/rules definitions or in settings - c
 * `%(*)` - refers to the all passed arguments (concatenated arguments list) (can be used only in user commands definitions)
 * `%(^)` - refers to the command string (command with all arguments) (can be used only in user commands definitions)
 
+
+### Text formatting
+
+Please use the `%(^...)` modifiers to format the text:
+
+* `%(^)` - ends the text formatting
+* `%(^#000000)` - colors the text with the hex color
+* `%(^b) or %(^bold)` - creates bold text
+* `%(^i) or %(^italic)` - creates italic text
+* `%(^u) or %(^underline)` - creates underlined text
+* `%(^l) or %(^line-through)` - creates line trough the text
+
+Example usage:
+```
+default %(^i)italics%(^) %(^u)underline%(^) %(^b)%(^i)bold italics%(^)%(^) %(^#DAA520)colored%(^)
+```
 
 ## Internally defined commands
 
@@ -251,10 +331,21 @@ You can also call other useful console methods:
 
 ## Changelog
 
-* v4.0.14 - New better console "input box" - now it looks more like a serious console; made some repairs.
-* v4.0.13 - Repaired another mass of bugs, added config descriptions, repaired exec function mechanics.
-* v4.0.11 - Repaired a mass of bugs :/
-* v4.0.7 - Added slide terminal animation (use backtick key trigger for better experience :) )
+* v4.0.15
+  * Added support for arrow keys in terminal input (press up/down arrow key to access the input history)
+  * Removed file highlighting bugs
+  * Added more special variables
+  * There's a new link annotation
+  * Added experimental file highlight feature
+  * Added commands view modal dialog
+* v4.0.14
+  * New better console "input box" - now it looks more like a serious console; made some repairs.
+* v4.0.13
+  * Repaired another mass of bugs, added config descriptions, repaired exec function mechanics.
+* v4.0.11
+  * Repaired a mass of bugs :/
+* v4.0.7
+  * Added slide terminal animation (use backtick key trigger for better experience :) )
 
 
 ## Example configuration
@@ -268,53 +359,75 @@ Note that after each config update you must call `update` command otherwise chan
 
 ```json
 {
+  "_comment": "Package atom-terminal-panel: This terminal-commands.json file was automatically generated by atom-terminal-package. It contains all useful config data.",
   "commands": {
-    "hello_world":
-      [
+    "hello_world": {
+      "description": "Prints the hello world message to the terminal output.",
+      "command": [
         "echo Hello world :D",
-        "echo %(*)","echo is",
+        "echo This is",
         "echo example usage",
         "echo of the console"
       ]
+    }
   },
+  "toolbar": [
+    [
+      "clear",
+      "clear",
+      "Clears the console output."
+    ],
+    [
+      "info",
+      "info",
+      "Prints the terminal welcome message."
+    ],
+    [
+      "all available commands",
+      "memdump",
+      "Displays all available builtin commands. (all commands except native)"
+    ]
+  ],
   "rules": {
-      "(error|err):? (.*)": {
-          "match": {
-            "matchLine": "true",
-            "replace": "%(label:error:text:Error) %(0)"
-          },
-          "css": {
-            "color": "red",
-            "font-weight": "bold"
-          }
+    "(error|err):? (.*)": {
+      "match": {
+        "matchLine": "true",
+        "replace": "%(label:error:text:Error) %(0)"
       },
-      "(warning|warn|alert):? (.*)": {
-          "match": {
-            "matchLine": "true",
-            "replace": "%(label:warning:text:Warning) %(0)"
-          },
-          "css": {
-            "color": "yellow"
-          }
-      },
-      "(note|info):? (.*)": {
-          "match": {
-            "matchLine": "true",
-            "replace": "%(label:info:text:Info) %(0)"
-          },
-          "css": {
-
-          }
-      },
-      "(debug|dbg):? (.*)": {
-          "match": {
-            "matchLine": "true",
-            "replace": "%(label:default:text:Debug) %(0)"
-          },
-          "css": {
-            "color": "gray"
-          }
+      "css": {
+        "color": "red",
+        "font-weight": "bold"
       }
+    },
+    "(warning|warn|alert):? (.*)": {
+      "match": {
+        "matchLine": "true",
+        "replace": "%(label:warning:text:Warning) %(0)"
+      },
+      "css": {
+        "color": "yellow"
+      }
+    },
+    "(note|information):? (.*)": {
+      "match": {
+        "matchLine": "true",
+        "replace": "%(label:info:text:Info) %(0)"
+      },
+      "css": {}
+    },
+    "(debug|dbg):? (.*)": {
+      "match": {
+        "matchLine": "true",
+        "replace": "%(label:default:text:Debug) %(0)"
+      },
+      "css": {
+        "color": "gray"
+      }
+    }
   }
 }
 ```
+
+## Experiments
+
+This package is in alpha development phase. You can enable experimental features, which may be added to the software in incoming releases.

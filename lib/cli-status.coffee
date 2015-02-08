@@ -100,7 +100,7 @@ module.exports =
       title: 'The command prompt message.'
       description: 'Set the command prompt message.'
       type: 'string'
-      default: '%(label:badge:text:%(line)) %(hours):%(minutes) $.../%(path:-2)/%(path:-1)>'
+      default: '%(label:badge:text:%(line)) %(^#C2C2C2)%(hours):%(minutes) $.../%(path:-2)/%(path:-1)>%(^)'
     'textReplacementCurrentPath':
       title: 'Current working directory replacement'
       description: 'Replacement for the current working directory path at the console output.'
@@ -110,9 +110,14 @@ module.exports =
       title: 'Currently edited file replacement'
       description: 'Replacement for the currently edited file at the console output.'
       type: 'string'
-      default: '%(link:%(file))'
+      default: '%(link)%(file)%(endlink)'
     'textReplacementFileAdress':
       title: 'File adress replacement'
       description: 'Replacement for any file adress at the console output.'
       type: 'string'
-      default: '%(link:%(file))'
+      default: '%(link)%(file)%(endlink)'
+    'XExperimentEnableForceLinking':
+      title: 'EXPERIMENTAL: Enable auto links'
+      description: 'Warning: This function is experimental, so it can be broken.'
+      type: 'boolean'
+      default: false
