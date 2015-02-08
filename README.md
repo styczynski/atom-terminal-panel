@@ -298,22 +298,29 @@ Just dot, extension name and CSS formatting.
 The ./config/functional-commands-external.coffee file contains the external functional commands (you can add your own commands).
 E.g.
 ```coffeescript
-"hello_world": (state, args)->
-  return "Hello world"
+"hello_world":
+  "description": "Prints hello world message to the screen."
+  "command": (state, args)->
+    return "Hello world"
 ```
 The state is the terminal view object and the args - the array of all passesd parameters.
 Your custom functional command can also create console links using ```state.consoleLink path```, labels using ```state.consoleLabel type, text``` or execute other commands:
 E.g.
 ```coffeescript
-"call_another": (state, args)->
-  return state.exec "echo Hello world", state, args
+"call_another":
+  "description": "This example shows how to call another command."
+  "command": (state, args)->
+    return state.exec "echo Hello world", state, args
 ```
-But if you're using ```state.exec``` you must remember about passing not only command string but also state and args parameters.
+But if you're using ```state.exec``` you must remember about passing not only command string but also state and args parameters (array of refernced parameters).
+The array of the referenced parameters contans all parameters which will be referenced by a command string (element at zero index in array will be used for %(0) replacement). If the command string do not reference its parameters you can pass only a null value.
 As you can see all terminal messages are displayed automatically (just return the string message). but you can also print them manually:
 ``` coffeescript
-"hello_world": (state, args)->
-  state.message 'Hello world'
-  return 'Second string hue hue :)'
+"hello_world":
+  "description": "Hello world example with two messages."
+  "command": (state, args)->
+    state.message 'Hello world'
+    return 'Second string hue hue :)'
 ```
 
 The ./config/terminal-style.less contains the general terminal stylesheet:
@@ -358,7 +365,10 @@ You can also call other useful console methods:
 
 ## Changelog
 
-* v4.0.15
+* v4.1.1
+  * Added icons to the command finder
+  * Added global variables list to the command finder
+* v4.1.0
   * Added support for arrow keys in terminal input (press up/down arrow key to access the input history)
   * Removed file highlighting bugs
   * Added more special variables

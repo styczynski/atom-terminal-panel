@@ -224,6 +224,7 @@ class CommandOutputView extends View
     obj = require '../config/functional-commands-external'
     for key, value of obj
       @localCommands[key] = value
+      @localCommands[key].source = 'external-functional'
 
     if core.getConfig()?
       toolbar = core.getConfig().toolbar
@@ -573,17 +574,67 @@ class CommandOutputView extends View
     return null
 
   getLocalCommandsMemdump: () ->
+    global_vars = {
+      "%(atom)" : "atom directory."
+      "%(path)" : "current working directory"
+      "%(file)" : "currenly opened file in the editor"
+      "%(editor.path)" : "path of the file currently opened in the editor"
+      "%(editor.file)" : "full path of the file currently opened in the editor"
+      "%(editor.name)" : "name of the file currently opened in the editor"
+      "%(cwd)" : "current working directory"
+      "%(hostname)" : "computer name"
+      "%(computer-name)" : "computer name"
+      "%(username)" : "currently logged in user"
+      "%(user)" : "currently logged in user"
+      "%(home)" : "home directory of the user"
+      "%(osname)" : "name of the operating system"
+      "%(os)" : "name of the operating system"
+      "%(env.*)" : "list of all available native environment variables"
+      "%(.day)" : "current date: day number (without leading zeros)"
+      "%(.month)" : "current date: month number (without leading zeros)"
+      "%(.year)" : "current date: year (without leading zeros)"
+      "%(.hours)" : "current date: hour 24-format (without leading zeros)"
+      "%(.hours12)" : "current date: hour 12-format (without leading zeros)"
+      "%(.minutes)" : "current date: minutes (without leading zeros)"
+      "%(.seconds)" : "current date: seconds (without leading zeros)"
+      "%(.milis)" : "current date: miliseconds (without leading zeros)"
+      "%(day)" : "current date: day number"
+      "%(month)" : "current date: month number"
+      "%(year)" : "current date: year"
+      "%(hours)" : "current date: hour 24-format"
+      "%(hours12)" : "current date: hour 12-format"
+      "%(minutes)" : "current date: minutes"
+      "%(seconds)" : "current date: seconds"
+      "%(milis)" : "current date: miliseconds"
+      "%(ampm)" : "displays am/pm (12-hour format)"
+      "%(AMPM)" : "displays AM/PM (12-hour format)"
+      "%(line)" : "input line number"
+      "%(disc)" : "current working directory disc name"
+    }
+
+    for key, value of node_process.env
+      global_vars['%(env.'+key+')'] = "access native environment variable: "+key
+
     cmd = []
     for cmd_name, cmd_body of @localCommands
       cmd.push {
         name: cmd_name
         description: cmd_body.description
+        source: cmd_body.source or 'internal'
       }
     for cmd_name, cmd_body of core.getUserCommands()
       cmd.push {
         name: cmd_name
         description: cmd_body.description
+        source: 'external'
       }
+    for var_name, descr of global_vars
+      cmd.push {
+        name: var_name
+        description: descr
+        source: 'global-variable'
+      }
+
     commandFinder = new CliCommandFinder cmd
     commandFinderPanel = atom.workspace.addModalPanel(item: commandFinder)
     commandFinder.shown commandFinderPanel, this

@@ -32,3 +32,8 @@ module.exports =
       app_file = app_name_match[0] + '.exe'
       state.execDelayedCommand '250', "#{app_file} < #{test_file}"
       return 'Probing application input ' + state.consoleLink(app_file) + ' < ' + state.consoleLink(test_file)
+
+  "@":
+    "description": "Access native environment variables."
+    "command": (state, args)->
+      return state.parseTemplate "%(env."+args[0]+")"
