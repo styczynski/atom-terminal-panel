@@ -33,12 +33,23 @@ There's also nice looking ease-to-use command finder dialog (just to search your
 * multiple terminal
 * colorful status icon
 * kill long live process
-* fancy ls
-* file and foler links (auto path detection)
+* fancy ls (with custom extension colouring!)
+  * Do you wanna have a blue or a green executables? Do the yellow shell scripts look nice?
+* file and directory links (auto path detection)
 * interactive content (tooltips and on-click-actions)
 * highlighting rules (define your own highlight options - supports awesome stuff like regex matching, replacement and link creation)
-* own commands support
 * nice looking slide animation on terminal open
+* navigate command history using arrow keys
+  * Just like in normal, native terminal.
+* search your favourite commands and built-ins
+  * Just type `?`, easy right?)
+* many useful special variables (like path to the currenly edited file)
+* customize your command prompt like never before using text formatting annotation and special variables!
+  * Do you want a current time, computer name or a cwd in your command prompt? There's no problem.
+* easily create custom commands!
+  * You don't have to play with dirty shell script files!
+* easily add new buttons to the terminal toolbar
+  * Now you can quickly access your command just by pressing one button!
 
 ## Terminal-commands.json
 The `terminal-commands.json` is the main config file for this package. If it's not present (or the JSON syntax is invalid) a new config file is created (in folder .atom).
@@ -238,7 +249,7 @@ default %(^i)italics%(^) %(^u)underline%(^) %(^b)%(^i)bold italics%(^)%(^) %(^#D
 
 ## Internally defined commands
 
-You can take advantage of commands like `memdump` which prints information about all plugin loaded commands.
+You can take advantage of commands like `memdump` which prints information about all loaded commands (internal, not native!).
 Here the list of all commands:
 
 * `ls`
