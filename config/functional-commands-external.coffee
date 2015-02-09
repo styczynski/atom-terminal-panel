@@ -37,3 +37,25 @@ module.exports =
     "description": "Access native environment variables."
     "command": (state, args)->
       return state.parseTemplate "%(env."+args[0]+")"
+
+  "cp":
+    "description": "Copies one/or more files to the specified directory (e.g cp ./test.js ./test/)"
+    "command": (state, args)->
+      srcs = args[..-2]
+      tgt = args[-1..]
+      return (state.util.cp srcs, tgt) + ' files copied.'
+
+  "mkdir":
+    "description": "Create one/or more directories."
+    "command": (state, args) ->
+      return state.util.mkdir args
+
+  "rmdir":
+    "description": "Remove one/or more directories."
+    "command": (state, args) ->
+      return state.util.rmdir args
+
+  "rename":
+    "description": "Rename the given file/directory."
+    "command": (state, args) ->
+      return state.util.rename args[0], args[1]

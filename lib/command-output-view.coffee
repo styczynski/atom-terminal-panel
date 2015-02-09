@@ -22,6 +22,7 @@ class CommandOutputView extends View
   inputLine: 50
   helloMessageShown: false
   minHeight: 250
+  util: require './cli-terminal-util'
   currentInputBox: null
   currentInputBoxTmr: null
   commandHistory: []
@@ -72,6 +73,7 @@ class CommandOutputView extends View
       "command": (state, args)->
         if args?
           state.message args.join(' ') + '\n'
+          return null
         else
           state.message '\n'
           return null
@@ -522,6 +524,7 @@ class CommandOutputView extends View
         if s[0] != '"' and s[0] != "'"
           s = s.replace /~/g, @userHome
         args.push s
+      args = @util.dir args, @getCwd()
       cmd = args.shift()
 
       command = null
