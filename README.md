@@ -365,6 +365,8 @@ You can also call other useful console methods:
 
 ## Changelog
 
+* v4.1.2
+  * Added new built-in commands (like rmdir, mkdir, cp etc.)
 * v4.1.1
   * Added icons to the command finder
   * Added global variables list to the command finder
