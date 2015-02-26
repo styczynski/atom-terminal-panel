@@ -12,6 +12,7 @@
     "ansi-html-stream": "0.0.3",
     "atom-space-pen-views": "^2.0.3",
     "domify": "~1.2.2",
-    "domutil": "~0.2.1"
+    "domutil": "~0.2.1",
+    "iconv-lite": "^0.4.7"
   }
 }

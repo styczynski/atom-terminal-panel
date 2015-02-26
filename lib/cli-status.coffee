@@ -79,6 +79,11 @@ module.exports =
       description: 'Always display welcome message when the terminal window is opened.'
       type: 'boolean'
       default: true
+    'enableConsoleSuggestionsDropdown':
+      title: 'Enable the console suggestions list.'
+      description: 'Makes the console display the suggested commands list in a dropdown list.'
+      type: 'boolean'
+      default: true
     'disabledExtendedCommands':
       title: 'Disabled commands:'
       description: 'You can disable any command (it will be used as native).'
@@ -88,7 +93,12 @@ module.exports =
         type: 'string'
     'moveToCurrentDirOnOpen':
       title: 'Always move to current directory'
-      description: 'Always move to currently selected file\'s directory when the console is opened (slows down terminal a little).'
+      description: 'Always move to currently selected file\'s directory when the console is opened.'
+      type: 'boolean'
+      default: true
+    'moveToCurrentDirOnOpenLS':
+      title: 'Always run \"ls\" in active console.'
+      description: 'Always run \"ls\" command when the console is opened (slows down terminal a little).'
       type: 'boolean'
       default: false
     'parseSpecialTemplateTokens':

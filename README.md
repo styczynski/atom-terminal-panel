@@ -236,7 +236,7 @@ You can use special annotation (on commands/rules definitions or in settings - c
 * `%(0), %(1), %(2)...` - refers to the passed arguments
 * `%(0), %(1), %(2)...` - also refers to the capture groups in user defined colouring rules
 * `%(*)` - refers to the all passed arguments (concatenated arguments list) (can be used only in user commands definitions)
-* `%(^)` - refers to the command string (command with all arguments) (can be used only in user commands definitions)
+* `%(*^)` - refers to the command string (command with all arguments) (can be used only in user commands definitions)
 
 
 ### Text formatting
@@ -365,6 +365,13 @@ You can also call other useful console methods:
 
 ## Changelog
 
+* v4.1.3
+  * Added autocomplete functionality
+  * Added new stuff to the command finder
+  * Command finder now works as it should earlier
+  * Now console correctly detects the project root directory
+  * Repaired conflicting markers
+    * Changed ` %(^) ` - full string command to ` %(*^) ` the formatting-end marker is the same - ` %(^) `
 * v4.1.2
   * Added new built-in commands (like rmdir, mkdir, cp etc.)
 * v4.1.1

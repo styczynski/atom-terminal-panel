@@ -48,7 +48,10 @@ module.exports =
   "mkdir":
     "description": "Create one/or more directories."
     "command": (state, args) ->
-      return state.util.mkdir args
+      try
+        return state.util.mkdir args
+      catch e
+        state.consoleAlert 'Failed to create directory '+e
 
   "rmdir":
     "description": "Remove one/or more directories."

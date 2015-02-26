@@ -19,6 +19,9 @@ class ExampleSelectListView extends SelectListView
     else if item.source == 'internal'
       icon_style = 'modified'
       descr_prefix = 'Builtin: '
+    else if item.source == 'internal-atom'
+      icon_style = 'removed'
+      descr_prefix = 'Atom command: '
     else if item.source == 'external-functional'
       icon_style = 'renamed'
       descr_prefix = 'Functional: '
@@ -34,10 +37,6 @@ class ExampleSelectListView extends SelectListView
         @div class: 'secondary-line', =>
           @span descr_prefix + item.description
 
-    #atom.tooltips.add li,
-    #title: 'Umpa umpa umpa.'
-    # return li
-
 
 
   shown: (panel, caller) ->
@@ -45,20 +44,13 @@ class ExampleSelectListView extends SelectListView
     @thisCaller = caller
 
   close: (item) ->
+
     if @thisPanel?
       try
         @thisPanel.destroy()
       catch e
-        return
-    if @thisCaller?
-      if not @getFilterQuery()?
-        if item?
-          @thisCaller.onCommand item.name
-      else
-        if @getFilterQuery() != ''
-          @thisCaller.onCommand @getFilterQuery()
-        else if item?
-          @thisCaller.onCommand item.name
+    if item?
+      @thisCaller.onCommand item.name
 
   cancel: ->
     @close null

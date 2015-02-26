@@ -8,15 +8,20 @@ readline = require 'readline'
 fs = require 'fs'
 os = require 'os'
 node_process = require 'process'
-window.$ = require('atom').$
+window.$ = window.jQuery = require('atom').$
 lastOpenedView = null
 CliCommandFinder = require './cli-command-finder'
 core = require './cli-core'
+stream = require 'stream'
+iconv = require 'iconv-lite'
+require '../ext/autocomplete.js'
+
 
 
 module.exports =
 class CommandOutputView extends View
   cwd: null
+  streamsEncoding: 'iso-8859-3'
   _cmdintdel: 50
   echoOn: true
   inputLine: 50
@@ -24,9 +29,8 @@ class CommandOutputView extends View
   minHeight: 250
   util: require './cli-terminal-util'
   currentInputBox: null
+  currentInputBox: null
   currentInputBoxTmr: null
-  commandHistory: []
-  commandHistoryNavigator: 0
   keyCodes: {
     enter: 13
     arrowUp: 38
@@ -34,7 +38,6 @@ class CommandOutputView extends View
     arrowLeft: 37
     arrowRight: 39
   }
-
   @content: ->
     @div tabIndex: -1, class: 'panel cli-status panel-bottom', =>
       @div class: 'panel-heading btn-toolbar', outlet:'consoleToolbarHeading', =>
@@ -53,8 +56,15 @@ class CommandOutputView extends View
       @div class: 'cli-panel-body', =>
         @pre class: "terminal", outlet: "cliOutput"
 
-
+  localCommandAtomBindings: []
   localCommands:
+    "encode":
+      "description": "Change encoding."
+      "command": (state, args)->
+        encoding = args[0]
+        state.streamsEncoding = encoding
+        state.message 'Changed encoding to '+encoding
+        return null
     "ls":
       "description": "Lists files in the current directory."
       "command": (state, args)->
@@ -120,7 +130,7 @@ class CommandOutputView extends View
       "description": "Reloads the terminal configuration from terminal-commands.json"
       "command": (state, args)->
         core.reload()
-        return (state.consoleLabel 'info', 'info') + '<span class="text-info" style="margin-left:10px;">The console settings were reloaded.</span>'
+        return (state.consoleLabel 'info', 'info') + (state.consoleText 'info', 'The console settings were reloaded')
     "reload":
       "description": "Reloads the atom window."
       "command": (state, args)->
@@ -171,8 +181,8 @@ class CommandOutputView extends View
     , 50
 
   focusInputBox: () ->
-    if @currentInputBox?
-      @currentInputBox.find('.terminal-input').focus()
+    if @currentInputBoxCmp?
+      @currentInputBoxCmp.input.focus()
 
   updateInputCursor: (textarea) ->
     @rawMessage 'test\n'
@@ -190,7 +200,13 @@ class CommandOutputView extends View
 
     @cliOutput.find('.cli-dynamic-input-box').remove()
     prompt = @getCommandPrompt('')+" "
-    @currentInputBox = $('<div tyle="display:inline-block;" class="cli-dynamic-input-box">' + prompt + '<input class="terminal-input native-key-bindings" type="text" size="25" value=""></div>')
+    @currentInputBox = $(
+      '<div style="width: 100%; white-space:nowrap; overflow:hidden; display:inline-block;" class="cli-dynamic-input-box">' +
+      prompt +
+      '<div style="position:relative; top:5px; width: 100%; white-space:nowrap; overflow:hidden; display:inline-block;" class="terminal-input native-key-bindings"></div>' +
+      '</div>'
+    )
+
     @currentInputBox.keypress (e) =>
        code = e.keyCode or e.which
        if code == @keyCodes.enter
@@ -199,27 +215,31 @@ class CommandOutputView extends View
     @cliOutput.click () =>
       @focusInputBox()
 
-    inputComp = @currentInputBox.find('.terminal-input')
-    inputComp.keydown (e) =>
-      code = e.keyCode or e.which
-      if code == @keyCodes.arrowUp
-        inputComp.focus()
-        inputComp.val ''
-        inputComp.val @historyNavigateNext()
-      else if code == @keyCodes.arrowDown
-        inputComp.focus()
-        inputComp.val ''
-        inputComp.val @historyNavigatePrev()
-      else
-        @historyNavigateClear()
+    history = []
+    if @currentInputBoxCmp?
+      history = @currentInputBoxCmp.getInputHistory()
+    inputComp = @currentInputBox.find '.terminal-input'
+
+    @currentInputBoxCmp = inputComp.autocomplete {
+      inputHistory: history
+      inputWidth: '80%'
+      showDropDown: atom.config.get 'atom-terminal-panel.enableConsoleSuggestionsDropdown'
+    }
+    options = @getCommandsNames()
+    @currentInputBoxCmp.options = options
+    @currentInputBoxCmp.hideDropDown()
+    setTimeout () =>
+   	 @currentInputBoxCmp.input.focus()
+    , 0
 
     @currentInputBox.appendTo @cliOutput
     @focusInputBox()
 
   readInputBox: () ->
     ret = ''
-    if @currentInputBox?
-      ret = @currentInputBox.find('.terminal-input').val()
+    if @currentInputBoxCmp?
+      # ret = @currentInputBox.find('.terminal-input').val()
+      ret = @currentInputBoxCmp.getText()
     return ret
 
   init: () ->
@@ -227,6 +247,24 @@ class CommandOutputView extends View
     for key, value of obj
       @localCommands[key] = value
       @localCommands[key].source = 'external-functional'
+
+    eleqr = atom.workspace.getActivePaneItem() ? atom.workspace
+    eleqr = atom.views.getView(eleqr)
+    atomCommands = atom.commands.findCommands({target: eleqr})
+    for command in atomCommands
+      comName = command.name
+      com = {}
+      com.description = command.displayName
+      com.command =
+        ((comNameP) ->
+          return (state, args) ->
+            ele = atom.workspace.getActivePaneItem() ? atom.workspace
+            ele = atom.views.getView(ele)
+            atom.commands.dispatch ele, comNameP
+            return (state.consoleLabel 'info', "info") + (state.consoleText 'info', 'Atom command executed: '+comNameP)
+        )(comName)
+      com.source = "internal-atom"
+      @localCommands[comName] = com
 
     if core.getConfig()?
       toolbar = core.getConfig().toolbar
@@ -447,12 +485,9 @@ class CommandOutputView extends View
     setTimeout callback, delay
 
   moveToCurrentDirectory: ()->
-    filepath = @getCurrentFileLocation()
     CURRENT_LOCATION = @getCurrentFileLocation()
     if CURRENT_LOCATION?
       @cd [CURRENT_LOCATION]
-      @clear()
-      @execDelayedCommand @_cmdintdel, 'ls', null, this
 
   getCurrentFileName: ()->
     current_file = @getCurrentFilePath()
@@ -464,11 +499,16 @@ class CommandOutputView extends View
   getCurrentFileLocation: ()->
     if @getCurrentFilePath() == null
       return null
-    # return @getCurrentFilePath()
     return  @replaceAll(@getCurrentFileName(), "", @getCurrentFilePath())
 
   getCurrentFilePath: ()->
-    editor = atom.workspace.getActivePaneItem()
+    te = atom.workspace.getActiveTextEditor()
+    if te?
+      if te.getPath()?
+        return te.getPath()
+
+    return null
+    ###editor = atom.workspace.getActivePaneItem()
     if editor == null || editor == undefined
       return null
     if editor?.buffer == undefined
@@ -476,7 +516,7 @@ class CommandOutputView extends View
     file = editor?.buffer.file
     if file == null || file == undefined
       return null
-    return file?.path
+    return file?.path###
 
   parseTemplate: (text, vars) ->
     ret = @parseSpecialStringTemplate text, vars
@@ -490,7 +530,7 @@ class CommandOutputView extends View
     cmd = @parseTemplate cmd, {file:@getCurrentFilePath()}
     if strArgs?
       cmd = @replaceAll "%(*)", strArgs, cmd
-    cmd = @replaceAll "%(^)", (@replaceAll "%(^)", "", cmd), cmd
+    cmd = @replaceAll "%(*^)", (@replaceAll "%(*^)", "", cmd), cmd
     if args?
       argsNum = args.length
       for i in [0..argsNum] by 1
@@ -576,7 +616,7 @@ class CommandOutputView extends View
           return cmd_body
     return null
 
-  getLocalCommandsMemdump: () ->
+  getCommandsRegistry: () ->
     global_vars = {
       "%(atom)" : "atom directory."
       "%(path)" : "current working directory"
@@ -613,6 +653,24 @@ class CommandOutputView extends View
       "%(AMPM)" : "displays AM/PM (12-hour format)"
       "%(line)" : "input line number"
       "%(disc)" : "current working directory disc name"
+      "%(label:TYPE:TEXT": "(styling-annotation) creates a label of the specified type"
+      "%(tooltip:TEXT:content:CONTENT)": "(styling-annotation) creates a tooltip message"
+      "%(link)": "(styling-annotation) starts the file link - see %(endlink)"
+      "%(endlink)": "(styling-annotation) ends the file link - see %(link)"
+      "%(^)": "(styling-annotation) ends text formatting"
+      "%(^COLOR)": "(styling-annotation) creates coloured text"
+      "%(^b)": "(styling-annotation) creates bolded text"
+      "%(^bold)": "(styling-annotation) creates bolded text"
+      "%(^i)": "(styling-annotation) creates italics text"
+      "%(^italics)": "(styling-annotation) creates italics text"
+      "%(^u)": "(styling-annotation) creates underline text"
+      "%(^underline)": "(styling-annotation) creates underline text"
+      "%(^l)": "(styling-annotation) creates a line through the text"
+      "%(^line-trough)": "(styling-annotation) creates a line through the text"
+      "%(path:INDEX)": "refers to the %(path) components"
+      "%(*)": "(only user-defined commands) refers to the all passed parameters"
+      "%(*^)": "(only user-defined commands) refers to the full command string"
+      "%(NUMBER)": "(only user-defined commands) refers to the passed parameters"
     }
 
     for key, value of node_process.env
@@ -638,6 +696,25 @@ class CommandOutputView extends View
         source: 'global-variable'
       }
 
+    cmd_ = []
+    cmd_len = cmd.length
+    cmd_forbd = atom.config.get 'atom-terminal-panel.disabledExtendedCommands'
+    for cmd_item in cmd
+      if cmd_item.name in cmd_forbd
+      else
+        cmd_.push cmd_item
+
+    return cmd_
+
+  getCommandsNames: () ->
+    cmds = @getCommandsRegistry()
+    cmd_names = []
+    for cmd in cmds
+      cmd_names.push cmd.name
+    return cmd_names
+
+  getLocalCommandsMemdump: () ->
+    cmd = @getCommandsRegistry()
     commandFinder = new CliCommandFinder cmd
     commandFinderPanel = atom.workspace.addModalPanel(item: commandFinder)
     commandFinder.shown commandFinderPanel, this
@@ -679,31 +756,11 @@ class CommandOutputView extends View
       @helloMessageShown = true
     return this
 
-  historyPush: (entry) ->
-    @commandHistory.push entry
-    @commandHistoryNavigator = @commandHistory.length - 1
-
-  historyNavigateNext: () ->
-    @commandHistoryNavigator++
-    if @commandHistoryNavigator >= @commandHistory.length
-      @commandHistoryNavigator = @commandHistory.length - 1
-    return @commandHistory[@commandHistoryNavigator]
-
-  historyNavigatePrev: () ->
-    @commandHistoryNavigator--
-    if @commandHistoryNavigator < 0
-      @commandHistoryNavigator = 0
-    return @commandHistory[@commandHistoryNavigator]
-
-  historyNavigateClear: () ->
-    @commandHistoryNavigator = @commandHistory.length - 1
-
   onCommand: (inputCmd) ->
     if not inputCmd?
       inputCmd = @readInputBox()
 
     @inputLine++
-    @historyPush inputCmd
     inputCmd = @parseSpecialStringTemplate inputCmd
 
     if @echoOn
@@ -715,6 +772,9 @@ class CommandOutputView extends View
 
     @scrollToBottom()
     @putInputBox()
+    setTimeout () =>
+      @putInputBox()
+    , 250
     return null
 
   initialize: ->
@@ -772,8 +832,12 @@ class CommandOutputView extends View
       @program.kill()
 
   open: ->
-    if disabledCommands = atom.config.get('atom-terminal-panel.moveToCurrentDirOnOpen')
+    if atom.config.get('atom-terminal-panel.moveToCurrentDirOnOpen')
       @moveToCurrentDirectory()
+    if atom.config.get('atom-terminal-panel.moveToCurrentDirOnOpenLS')
+      @clear()
+      @execDelayedCommand @_cmdintdel, 'ls', null, this
+
     @lastLocation = atom.workspace.getActivePane()
     atom.workspace.addBottomPanel(item: this) unless @hasParent()
     if lastOpenedView and lastOpenedView != this
@@ -835,6 +899,8 @@ class CommandOutputView extends View
       @open()
 
   removeQuotes: (text)->
+    if not text?
+      return ''
     if text instanceof Array
       ret = []
       for t in text
@@ -946,7 +1012,18 @@ class CommandOutputView extends View
     return '<div class="alert alert-danger alert-dismissible" role="alert"><button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button><strong>Warning!</strong> ' + text + '</div>'
 
   consolePanel: (title, content) ->
-    return '<div class="panel panel-info"><div class="panel-heading">'+title+'</div><div class="panel-body">'+content+'</div></div><br><br>'
+    return '<div class="panel panel-info welcome-panel"><div class="panel-heading">'+title+'</div><div class="panel-body">'+content+'</div></div><br><br>'
+
+  consoleText: (type, text) ->
+    if type == 'info'
+      return '<span class="text-info" style="margin-left:10px;">'+text+'</span>'
+    if type == 'error'
+      return '<span class="text-error" style="margin-left:10px;">'+text+'</span>'
+    if type == 'warning'
+      return '<span class="text-warning" style="margin-left:10px;">'+text+'</span>'
+    if type == 'success'
+      return '<span class="text-success" style="margin-left:10px;">'+text+'</span>'
+    return text
 
   consoleLabel: (type, text) ->
     if not atom.config.get 'atom-terminal-panel.enableConsoleLabels'
@@ -1249,15 +1326,19 @@ class CommandOutputView extends View
 
   spawn: (inputCmd, cmd, args) ->
     # @cmdEditor.hide()
-    htmlStream = ansihtml()
+    # htmlStream = ansihtml()
+    htmlStream = iconv.decodeStream @streamsEncoding
     htmlStream.on 'data', (data) =>
-      @message(data)
+      @cliOutput.append data
       @scrollToBottom()
     try
       # @program = spawn cmd, args, stdio: 'pipe', env: process.env, cwd: @getCwd()
       @program = exec inputCmd, stdio: 'pipe', env: process.env, cwd: @getCwd()
+      @program.stdin.pipe htmlStream
       @program.stdout.pipe htmlStream
       @program.stderr.pipe htmlStream
+      # @program.stdout.setEncoding @streamsEncoding
+
       removeClass @statusIcon, 'status-success'
       removeClass @statusIcon, 'status-error'
       addClass @statusIcon, 'status-running'

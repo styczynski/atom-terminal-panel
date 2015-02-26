@@ -5,14 +5,32 @@
 @import "ui-variables";
 
 
-.terminal-input {
+.autocomplete-input {
   background-color: transparent;
   border: none;
   color: white;
   font-weight: 900;
   font-size: 110%;
-  width: auto;
 }
+
+.autocomplete-dropdown {
+  color: white;
+  font-size: 90%;
+  font-family: "Lucida Console";
+  background-color: black;
+  font-weight: normal;
+}
+
+.autocomplete-hover-item {
+  background-color: #626262;
+  color: black;
+  font-weight: normal;
+}
+
+.autocomplete-hint {
+  color: gray;
+}
+
 
 .cli-status {
 
@@ -24,8 +42,13 @@
     font-family: "Lucida Console";
   }
 
+  .welcome-panel {
+    .panel-heading {
+      background-color: @button-background-color-hover;
+    }
+  }
+
   .panel-heading {
-    // margin: 1px;
     padding: 2px;
     text-align: right;
     .btn {
@@ -37,7 +60,6 @@
   }
 
   .terminal {
-    // let's keep this as a fallback
     max-height: 300px;
     overflow-y: scroll;
     bottom: @component-padding;
