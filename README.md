@@ -6,6 +6,11 @@ Plugin for ATOM Editor.
 
 ![A screenshot of atom-terminal-panel package](https://raw.githubusercontent.com/isis97/atom-terminal-panel/master/static/example_small.gif)
 
+## Short note
+
+This project uses `jquery-autocomplete-js` for autocompletion. [See git repo](https://github.com/isis97/autocomplete-js)
+
+
 ## Development
 
 This project is in alpha stage.
@@ -365,7 +370,11 @@ You can also call other useful console methods:
 
 ## Changelog
 
-* v4.1.3
+* v4.2.1
+  * Repaired broken requires.
+  * Repaired `jquery-autocomplete-js` dependency
+  * Developed a better errors handling
+* v4.2.0
   * Added autocomplete functionality
   * Added new stuff to the command finder
   * Command finder now works as it should earlier

@@ -1,6 +1,8 @@
+require './cli-utils'
 
-{resolve, dirname, extname} = require 'path'
-fs = require 'fs'
+{resolve, dirname, extname} = include 'path'
+fs = include 'fs'
+runner = include './cli-runner'
 
 class CliCore
 
@@ -87,6 +89,8 @@ class CliCore
       try
         @state.config = JSON.parse fs.readFileSync @state.statePath
       catch e
+        console.log 'cli-core cannot reload terminal config file: invalid content', e.message
+        atom.notifications.addWarning "atom-terminal-panel: Could not load the config file. The new file will be created. Reason: "+e.message
         @state.opened = no
       if not @state.opened
         @createDefaultCommandsFile()

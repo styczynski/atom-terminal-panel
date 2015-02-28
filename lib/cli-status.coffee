@@ -1,6 +1,7 @@
-CliStatusView = require './cli-status-view'
+require './cli-utils'
 
-core = require './cli-core'
+CliStatusView = include './cli-status-view'
+core = include './cli-core'
 module.exports =
   cliStatusView: null
 

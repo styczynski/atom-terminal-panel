@@ -1,4 +1,6 @@
-{SelectListView, $$} = require 'atom-space-pen-views'
+require './cli-utils'
+
+{SelectListView, $$} = include 'atom-space-pen-views'
 
 module.exports =
 class ExampleSelectListView extends SelectListView
@@ -14,24 +16,24 @@ class ExampleSelectListView extends SelectListView
     icon_style = ''
     descr_prefix = ''
     if item.source == 'external'
-      icon_style = 'added'
+      icon_style = 'book'
       descr_prefix = 'External: '
     else if item.source == 'internal'
-      icon_style = 'modified'
+      icon_style = 'repo'
       descr_prefix = 'Builtin: '
     else if item.source == 'internal-atom'
-      icon_style = 'removed'
+      icon_style = 'repo'
       descr_prefix = 'Atom command: '
     else if item.source == 'external-functional'
-      icon_style = 'renamed'
+      icon_style = 'plus'
       descr_prefix = 'Functional: '
     else if item.source == 'global-variable'
-      icon_style = 'ignored'
+      icon_style = 'briefcase'
       descr_prefix = 'Global variable: '
 
     $$ ->
       @li class: 'two-lines selected', =>
-        @div class: "status status-#{icon_style} icon icon-diff-#{icon_style}"
+        @div class: "status status-#{icon_style} icon icon-#{icon_style}"
         @div class: 'primary-line', =>
           @span item.name
         @div class: 'secondary-line', =>

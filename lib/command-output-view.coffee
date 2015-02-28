@@ -1,20 +1,21 @@
+require './cli-utils'
 
-{TextEditorView, View} = require 'atom-space-pen-views'
-{spawn, exec} = require 'child_process'
-ansihtml = require 'ansi-html-stream'
-readline = require 'readline'
-{addClass, removeClass} = require 'domutil'
-{resolve, dirname, extname} = require 'path'
-fs = require 'fs'
-os = require 'os'
-node_process = require 'process'
-window.$ = window.jQuery = require('atom').$
+{TextEditorView, View} = include 'atom-space-pen-views'
+{spawn, exec} = include 'child_process'
+ansihtml = include 'ansi-html-stream'
+readline = include 'readline'
+{addClass, removeClass} = include 'domutil'
+{resolve, dirname, extname} = include 'path'
+fs = include 'fs'
+os = include 'os'
+window.$ = window.jQuery = include('atom').$
 lastOpenedView = null
-CliCommandFinder = require './cli-command-finder'
-core = require './cli-core'
-stream = require 'stream'
-iconv = require 'iconv-lite'
-require '../ext/autocomplete.js'
+CliCommandFinder = include './cli-command-finder'
+core = include './cli-core'
+stream = include 'stream'
+iconv = include 'iconv-lite'
+runner = include './cli-runner'
+include 'jquery-autocomplete-js'
 
 
 
@@ -27,7 +28,7 @@ class CommandOutputView extends View
   inputLine: 50
   helloMessageShown: false
   minHeight: 250
-  util: require './cli-terminal-util'
+  util: include './cli-terminal-util'
   currentInputBox: null
   currentInputBox: null
   currentInputBoxTmr: null
@@ -243,7 +244,7 @@ class CommandOutputView extends View
     return ret
 
   init: () ->
-    obj = require '../config/functional-commands-external'
+    obj = include '../config/functional-commands-external'
     for key, value of obj
       @localCommands[key] = value
       @localCommands[key].source = 'external-functional'
@@ -316,14 +317,14 @@ class CommandOutputView extends View
     prompt = @replaceAll '%(hostname)', os.hostname(), prompt
     prompt = @replaceAll '%(computer-name)', os.hostname(), prompt
 
-    username = node_process.env.USERNAME or node_process.env.LOGNAME or node_process.env.USER
+    username = process.env.USERNAME or process.env.LOGNAME or process.env.USER
     prompt = @replaceAll '%(username)', username, prompt
     prompt = @replaceAll '%(user)', username, prompt
 
-    homelocation = node_process.env.HOME or node_process.env.HOMEPATH or node_process.env.HOMEDIR
+    homelocation = process.env.HOME or process.env.HOMEPATH or process.env.HOMEDIR
     prompt = @replaceAll '%(home)', homelocation, prompt
 
-    osname = node_process.platform or node_process.env.OS
+    osname = process.platform or process.env.OS
     prompt = @replaceAll '%(osname)', osname, prompt
     prompt = @replaceAll '%(os)', osname, prompt
 
@@ -333,12 +334,12 @@ class CommandOutputView extends View
       nativeVarName = nativeVarName.substring(0, nativeVarName.length-1)
       if nativeVarName == '*'
         ret = 'process.env {\n'
-        for key, value of node_process.env
+        for key, value of process.env
           ret += '\t' + key + '\n'
         ret += '}'
         return ret
 
-      return node_process.env[nativeVarName]
+      return process.env[nativeVarName]
 
 
     if cmd?
@@ -673,7 +674,7 @@ class CommandOutputView extends View
       "%(NUMBER)": "(only user-defined commands) refers to the passed parameters"
     }
 
-    for key, value of node_process.env
+    for key, value of process.env
       global_vars['%(env.'+key+')'] = "access native environment variable: "+key
 
     cmd = []

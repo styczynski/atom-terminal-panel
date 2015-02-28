@@ -1,6 +1,8 @@
-{View} = require 'atom-space-pen-views'
-domify = require 'domify'
-CommandOutputView = require './command-output-view'
+require './cli-utils'
+
+{View} = include 'atom-space-pen-views'
+domify = include 'domify'
+CommandOutputView = include './command-output-view'
 
 module.exports =
 class CliStatusView extends View

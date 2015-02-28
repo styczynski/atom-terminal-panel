@@ -1,5 +1,7 @@
-fs = require 'fs'
-{resolve, dirname, extname} = require 'path'
+require './cli-utils'
+
+fs = include 'fs'
+{resolve, dirname, extname} = include 'path'
 
 class Util
 
