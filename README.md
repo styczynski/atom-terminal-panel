@@ -1,3 +1,8 @@
+[![SHIELD](https://img.shields.io/badge/license-MIT-blue.svg?style=flat-square)](https://github.com/isis97/atom-terminal-panel)
+[![SHIELD](http://img.shields.io/github/tag/isis97/atom-terminal-panel.svg?style=flat-square)](https://github.com/isis97/atom-terminal-panel)
+
+
+
 atom-terminal-panel
 ==============
 
