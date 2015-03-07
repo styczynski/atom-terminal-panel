@@ -1,4 +1,16 @@
+###
+  == ATOM-TERMINAL-PANEL  HELPERS PLUGIN ==
 
+  Atom-terminal-panel builtin plugin v1.0.0
+  -isis97
+
+  Contains helper commands (mainly for C/C++ compilation/testing).
+  These commands are defined just for testing purposes.
+  You can remove this file safely.
+
+  MIT License
+  Feel free to do anything with this file.
+###
 module.exports =
   "compile":
     "description": "Compiles the C/C++ file using g++."
@@ -32,33 +44,3 @@ module.exports =
       app_file = app_name_match[0] + '.exe'
       state.execDelayedCommand '250', "#{app_file} < #{test_file}"
       return 'Probing application input ' + state.consoleLink(app_file) + ' < ' + state.consoleLink(test_file)
-
-  "@":
-    "description": "Access native environment variables."
-    "command": (state, args)->
-      return state.parseTemplate "%(env."+args[0]+")"
-
-  "cp":
-    "description": "Copies one/or more files to the specified directory (e.g cp ./test.js ./test/)"
-    "command": (state, args)->
-      srcs = args[..-2]
-      tgt = args[-1..]
-      return (state.util.cp srcs, tgt) + ' files copied.'
-
-  "mkdir":
-    "description": "Create one/or more directories."
-    "command": (state, args) ->
-      try
-        return state.util.mkdir args
-      catch e
-        state.consoleAlert 'Failed to create directory '+e
-
-  "rmdir":
-    "description": "Remove one/or more directories."
-    "command": (state, args) ->
-      return state.util.rmdir args
-
-  "rename":
-    "description": "Rename the given file/directory."
-    "command": (state, args) ->
-      return state.util.rename args[0], args[1]

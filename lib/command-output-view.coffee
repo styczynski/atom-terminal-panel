@@ -204,7 +204,7 @@ class CommandOutputView extends View
     @currentInputBox = $(
       '<div style="width: 100%; white-space:nowrap; overflow:hidden; display:inline-block;" class="cli-dynamic-input-box">' +
       prompt +
-      '<div style="position:relative; top:5px; width: 100%; white-space:nowrap; overflow:hidden; display:inline-block;" class="terminal-input native-key-bindings"></div>' +
+      '<div style="position:relative; top:5px; max-height:500px; width: 100%; white-space:nowrap; overflow:hidden; display:inline-block;" class="terminal-input native-key-bindings"></div>' +
       '</div>'
     )
 
@@ -244,10 +244,19 @@ class CommandOutputView extends View
     return ret
 
   init: () ->
-    obj = include '../config/functional-commands-external'
-    for key, value of obj
-      @localCommands[key] = value
-      @localCommands[key].source = 'external-functional'
+
+    normalizedPath = require("path").join(__dirname, "../commands");
+    console.log ("Loading atom-terminal-panel plugins from the directory: "+normalizedPath+"\n") if atom.config.get('atom-terminal-panel.logConsole')
+    fs.readdirSync(normalizedPath).forEach( (file) =>
+      console.log ("Require atom-terminal-panel plugin: "+file+"\n") if atom.config.get('atom-terminal-panel.logConsole')
+      obj = require ("../commands/" +file)
+      console.log "File loaded."
+      for key, value of obj
+        @localCommands[key] = value
+        @localCommands[key].source = 'external-functional'
+        @localCommands[key].sourcefile = @replaceAll '.coffee', '', file
+    )
+    console.log ("All plugins were loaded.") if atom.config.get('atom-terminal-panel.logConsole')
 
     eleqr = atom.workspace.getActivePaneItem() ? atom.workspace
     eleqr = atom.views.getView(eleqr)
@@ -682,12 +691,20 @@ class CommandOutputView extends View
       cmd.push {
         name: cmd_name
         description: cmd_body.description
+        example: cmd_body.example
+        params: cmd_body.params
+        deprecated: cmd_body.deprecated
+        sourcefile: cmd_body.sourcefile
         source: cmd_body.source or 'internal'
       }
     for cmd_name, cmd_body of core.getUserCommands()
       cmd.push {
         name: cmd_name
         description: cmd_body.description
+        example: cmd_body.example
+        params: cmd_body.params
+        deprecated: cmd_body.deprecated
+        sourcefile: cmd_body.sourcefile
         source: 'external'
       }
     for var_name, descr of global_vars
@@ -710,8 +727,46 @@ class CommandOutputView extends View
   getCommandsNames: () ->
     cmds = @getCommandsRegistry()
     cmd_names = []
-    for cmd in cmds
-      cmd_names.push cmd.name
+    for item in cmds
+      descr = ""
+      example = ""
+      params = ""
+      sourcefile = ""
+      deprecated = false
+      name = item.name
+      if item.sourcefile?
+        sourcefile = "<div style='float:bottom'><b style='float:right'>Plugin #{item.sourcefile}&nbsp;&nbsp;&nbsp;<b></div>"
+      if item.example?
+        example = "<br><b><u>Example:</u></b><br><code>"+item.example+"</code>"
+      if item.params?
+        params = item.params
+      if item.deprecated
+        deprecated = true
+      icon_style = ''
+      descr_prefix = ''
+      if item.source == 'external'
+        icon_style = 'book'
+        descr_prefix = 'External: '
+      else if item.source == 'internal'
+        icon_style = 'repo'
+        descr_prefix = 'Builtin: '
+      else if item.source == 'internal-atom'
+        icon_style = 'repo'
+        descr_prefix = 'Atom command: '
+      else if item.source == 'external-functional'
+        icon_style = 'plus'
+        descr_prefix = 'Functional: '
+      else if item.source == 'global-variable'
+        icon_style = 'briefcase'
+        descr_prefix = 'Global variable: '
+      if deprecated
+        name = "<strike style='color:gray;font-weight:normal;'>"+name+"</strike>"
+      descr = "<div style='float:left; padding-top:10px;' class='status status-#{icon_style} icon icon-#{icon_style}'></div><div style='padding-left: 10px;'><b>#{name} #{params}</b><br>#{item.description} #{example} #{sourcefile}</div>"
+      cmd_names.push {
+        name: item.name
+        description: descr
+        html: true
+      }
     return cmd_names
 
   getLocalCommandsMemdump: () ->

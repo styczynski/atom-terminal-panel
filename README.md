@@ -3,18 +3,16 @@
 
 
 
+
 atom-terminal-panel
 ==============
 
 (a fork of super-awesome atom package - thedaniel/terminal-panel)
 Plugin for ATOM Editor.
 
-![A screenshot of atom-terminal-panel package](https://raw.githubusercontent.com/isis97/atom-terminal-panel/master/static/example_small.gif)
-
 ## Short note
 
 This project uses `jquery-autocomplete-js` for autocompletion. [See git repo](https://github.com/isis97/autocomplete-js)
-
 
 ## Development
 
@@ -25,7 +23,7 @@ Feel free to propose new feautures, modify existing code, report issues.
 Thank you.
 
 ## Usage
-Just press `shift-enter` or just `` ` `` (backtick) and enjoy your cool ATOM terminal :D
+Just press `shift-enter` or just `` Ctrl + ` `` (control + backtick) and enjoy your cool ATOM terminal :D
 
 ## Screenshot
 
@@ -67,7 +65,16 @@ There's also nice looking easy-to-use command finder dialog (just to search your
 * easily create custom commands!
   * You don't have to play with dirty shell script files!
 * easily add new buttons to the terminal toolbar
-  * Now you can quickly access your command just by pressing one button!
+  * Now you can quickly access your command just by pressing one button
+* auto suggestions and commands descriptions for ease of use
+* modular commands system
+  * To add new commands just write your own /or download existing plugin!
+  * And copy it to the ./commands directory! - Easy, right?
+
+## Plugins
+
+This ATOM plugin is modular. You can create your own commands or download existing from the other users.
+The release contains also the built-in plugins (for file system management etc.).
 
 ## Terminal-commands.json
 The `terminal-commands.json` is the main configuration file for this package. If it's not present (or the JSON syntax is invalid) a new config file is created (in folder .atom).
@@ -305,13 +312,15 @@ E.g:
 Simple like making a cup of fresh coffee...
 Just dot, extension name and CSS formatting.
 
-The ./config/functional-commands-external.coffee file contains the external functional commands (you can add your own commands).
+The ./commands director contains the plugins (you can add your own commands).
+Each plugin exports a list of all custom commands.
 E.g.
 ```coffeescript
-"hello_world":
-  "description": "Prints hello world message to the screen."
-  "command": (state, args)->
-    return "Hello world"
+module.exports =
+  "hello_world":
+    "description": "Prints hello world message to the screen."
+    "command": (state, args)->
+      return "Hello world"
 ```
 The state is the terminal view object and the args - the array of all passesd parameters.
 Your custom functional command can also create console links using ```state.consoleLink path```, labels using ```state.consoleLabel type, text``` or execute other commands:
@@ -327,6 +336,18 @@ The array of the referenced parameters contans all parameters which will be refe
 As you can see all terminal messages are displayed automatically (just return the string message). but you can also print them manually:
 ``` coffeescript
 "hello_world":
+  "description": "Hello world example with two messages."
+  "command": (state, args)->
+    state.message 'Hello world'
+    return 'Second string hue hue :)'
+```
+
+You can specify the command description, example usage and if the plugin command is outdated - make it deprecated:
+``` coffeescript
+"hello_world":
+  "deprecated": true
+  "example": "hello_world"
+  "params": "[NONE]"
   "description": "Hello world example with two messages."
   "command": (state, args)->
     state.message 'Hello world'
@@ -375,6 +396,11 @@ You can also call other useful console methods:
 
 ## Changelog
 
+* v4.2.2
+  * Added moular plugin system
+  * Changed the console trigger
+    * From backtick to backtick+ctrl
+  * Added description box next to the suggestions dropdown
 * v4.2.1
   * Repaired broken requires.
   * Repaired `jquery-autocomplete-js` dependency

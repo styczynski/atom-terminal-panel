@@ -21,7 +21,7 @@
   'alt-shift-j': 'atom-terminal-panel:next'
   'alt-shift-k': 'atom-terminal-panel:prev'
   'alt-shift-x': 'atom-terminal-panel:destroy'
-  '`': 'atom-terminal-panel:toggle'
+  'ctrl-`': 'atom-terminal-panel:toggle'
 
 '.cli-status':
   'cmd-c': 'native!'

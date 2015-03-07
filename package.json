@@ -13,7 +13,7 @@
     "atom-space-pen-views": "^2.0.3",
     "domify": "~1.2.2",
     "domutil": "~0.2.1",
-    "jquery-autocomplete-js": "^1.0.1",
+    "jquery-autocomplete-js": "^1.0.3",
     "iconv-lite": "^0.4.7"
   }
 }
