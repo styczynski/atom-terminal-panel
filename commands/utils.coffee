@@ -1,3 +1,5 @@
+vm = require 'vm'
+
 ###
   == ATOM-TERMINAL-PANEL  UTILS PLUGIN ==
 
@@ -14,3 +16,9 @@ module.exports =
     "description": "Shows the ATOM settings."
     "command": (state, args)->
       state.exec 'application:show-settings', args, state
+  "eval":
+    "description": "Evaluates any javascript code."
+    "params": "[CODE]"
+    "command": (state, args)->
+      (vm.runInThisContext args[0])
+      return null

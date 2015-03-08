@@ -16,6 +16,7 @@ module.exports =
       return state.parseTemplate "%(env."+args[0]+")"
 
   "cp":
+    "params": "[file]... [destination]"
     "description": "Copies one/or more files to the specified directory (e.g cp ./test.js ./test/)"
     "command": (state, args)->
       srcs = args[..-2]
@@ -26,6 +27,7 @@ module.exports =
         state.consoleAlert 'Failed to copy the given entries '+e
 
   "mkdir":
+    "params": "[name]..."
     "description": "Create one/or more directories."
     "params": "[FOLDER NAME]"
     "command": (state, args) ->
@@ -35,6 +37,7 @@ module.exports =
         state.consoleAlert 'Failed to create directory '+e
 
   "rmdir":
+    "params": "[directory]..."
     "description": "Remove one/or more directories."
     "command": (state, args) ->
       try
@@ -43,6 +46,7 @@ module.exports =
         state.consoleAlert 'Failed to remove directory '+e
 
   "rename":
+    "params": "[name] [new name]"
     "description": "Rename the given file/directory."
     "command": (state, args) ->
       try

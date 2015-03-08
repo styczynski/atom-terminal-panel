@@ -60,6 +60,8 @@ class CommandOutputView extends View
   localCommandAtomBindings: []
   localCommands:
     "encode":
+      "params": "[encoding standard]"
+      "deprecated": true
       "description": "Change encoding."
       "command": (state, args)->
         encoding = args[0]
@@ -80,6 +82,7 @@ class CommandOutputView extends View
         state.clear()
         return null
     "echo":
+      "params": "[text]..."
       "description": "Prints the message to the output."
       "command": (state, args)->
         if args?
@@ -89,9 +92,11 @@ class CommandOutputView extends View
           state.message '\n'
           return null
     "print":
+      "params": "[text]..."
       "description": "Stringifies given parameters."
       "command": (state, args)-> return JSON.stringify(args)
     "cd":
+      "params": "[directory]"
       "description": "Moves to the specified directory."
       "command": (state, args)-> state.cd args
     "new":
@@ -111,6 +116,7 @@ class CommandOutputView extends View
             atom.workspaceView.open file_path
           return state.consoleLink file_path
     "rm":
+      "params": "[file]"
       "description": "Removes the given file."
       "command": (state, args)->
         filepath = state.resolvePath args[0]
@@ -137,6 +143,7 @@ class CommandOutputView extends View
       "command": (state, args)->
         atom.reload()
     "edit":
+      "params": "[file]"
       "description": "Opens the specified file in the editor view."
       "command": (state, args)->
         file_name = state.resolvePath args[0]
@@ -144,11 +151,13 @@ class CommandOutputView extends View
           atom.workspaceView.open (file_name)
         return state.consoleLink file_name
     "link":
+      "params": "[file/directory]"
       "description": "Displays interactive link to the given file/directory."
       "command": (state, args)->
         file_name = state.resolvePath args[0]
         return state.consoleLink file_name
     "l":
+      "params": "[file/directory]"
       "description": "Displays interactive link to the given file/directory."
       "command": (state, args)->
         return state.exec 'link '+args[0], null, state

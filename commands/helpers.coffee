@@ -13,7 +13,7 @@
 ###
 module.exports =
   "compile":
-    "description": "Compiles the C/C++ file using g++."
+    "description": "Compiles the currently opened C/C++ file using g++."
     "command": (state, args)->
       SOURCE_FILE = state.getCurrentFilePath()
       COMPILER_NAME = 'g++'
@@ -29,14 +29,16 @@ module.exports =
       return state.exec "#{COMPILER_NAME} #{COMPILER_FLAGS} \"#{SOURCE_FILE}\" -o \"#{TARGET_FILE}\" #{ADDITIONAL_FLAGS}", args, state
 
   "run":
-    "description": "! Only for testing purposes. (meaningless)"
+    "params": "[name]"
+    "description": "! Only for testing purposes. (meaningless). Runs the [name].exe file."
     "command": (state, args)->
       SOURCE_FILE = state.getCurrentFilePath()
       TARGET_FILE = "#{SOURCE_FILE}.exe"
       return state.exec "\"#{TARGET_FILE}\"", args, state
 
   "test":
-    "description": "Tests the specified file with the input file."
+    "params": "[name]"
+    "description": "Tests the specified file with the input file. (executes [name].exe < [name])"
     "command": (state, args)->
       test_file = args[0]
       app_name_matcher = /([^0-9])*/ig
