@@ -1,5 +1,7 @@
 ## Changelog
 
+* v4.3.1
+  * Repaired bugs...
 * v4.3.0
   * Repaired some bugs
   * Developed better plugin system

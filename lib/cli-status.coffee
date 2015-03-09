@@ -111,7 +111,7 @@ module.exports =
       title: 'The command prompt message.'
       description: 'Set the command prompt message.'
       type: 'string'
-      default: '%(label:badge:text:%(line)) %(^#C2C2C2)%(hours):%(minutes) $.../%(path:-2)/%(path:-1)>%(^)'
+      default: '%(label:badge:text:%(line)) %(^#FF851B)%(hours):%(minutes)%(^) %(^#01FF70)%(hostname)%(^):%(^#DDDDDD)%(^#39CCCC)../%(path:-2)/%(path:-1)%(^)>%(^)'
     'textReplacementCurrentPath':
       title: 'Current working directory replacement'
       description: 'Replacement for the current working directory path at the console output.'

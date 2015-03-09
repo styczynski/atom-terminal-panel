@@ -25,7 +25,7 @@ class CommandOutputView extends View
   streamsEncoding: 'iso-8859-3'
   _cmdintdel: 50
   echoOn: true
-  inputLine: 50
+  inputLine: 0
   helloMessageShown: false
   minHeight: 250
   util: include './cli-terminal-util'
@@ -269,12 +269,12 @@ class CommandOutputView extends View
       css_dependencies = []
     for css_dependency in css_dependencies
       @requireCSS path+"/"+css_dependency
-      
+
     delete plugin['dependencies']
 
 
   init: () ->
-    normalizedPath = require("path").join(__dirname, "../commands");
+    normalizedPath = require("path").join(__dirname, "../commands")
     console.log ("Loading atom-terminal-panel plugins from the directory: "+normalizedPath+"\n") if atom.config.get('atom-terminal-panel.logConsole')
     fs.readdirSync(normalizedPath).forEach( (folder) =>
       fullpath = resolve "../commands/" +folder
@@ -838,8 +838,17 @@ class CommandOutputView extends View
       if @helloMessageShown
         return
     if atom.config.get 'atom-terminal-panel.enableConsoleStartupInfo' or forceShow
-      hello_message = @consolePanel 'ATOM Terminal', 'Please enter new commands to the box below.<br>The console supports special anotattion like: %(path), %(file), %(link)file.something%(endlink).<br>It also supports special HTML elements like: %(tooltip:A:content:B) and so on.<br>Hope you\'ll enjoy the terminal.'
+      changelog_path = require("path").join(__dirname, "../CHANGELOG.md");
+      readme_path = require("path").join(__dirname, "../README.md");
+      hello_message = @consolePanel 'ATOM Terminal', 'Please enter new commands to the box below.<br>The console supports special anotattion like: %(path), %(file), %(link)file.something%(endlink).<br>It also supports special HTML elements like: %(tooltip:A:content:B) and so on.<br>Hope you\'ll enjoy the terminal.'+
+      "<br><a class='changelog-link' href='#{changelog_path}'>See changelog</a>&nbsp;&nbsp;<a class='readme-link' href='#{readme_path}'>and the README! :)</a>"
       @rawMessage hello_message
+      $('.changelog-link').css('font-weight','300%').click(() =>
+          atom.workspaceView.open changelog_path
+      )
+      $('.readme-link').css('font-weight','300%').click(() =>
+          atom.workspaceView.open readme_path
+      )
       @helloMessageShown = true
     return this
 
@@ -916,6 +925,8 @@ class CommandOutputView extends View
 
   kill: ->
     if @program
+      @program.stdin.pause();
+      @program.kill('SIGINT')
       @program.kill()
 
   open: ->
