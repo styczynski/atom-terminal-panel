@@ -13,7 +13,7 @@
   'cmd-shift-j': 'atom-terminal-panel:next'
   'cmd-shift-k': 'atom-terminal-panel:prev'
   'cmd-shift-x': 'atom-terminal-panel:destroy'
-  '`': 'atom-terminal-panel:toggle'
+  'ctrl-`': 'atom-terminal-panel:toggle'
 
 '.platform-linux atom-workspace, .platform-win32 atom-workspace':
   'shift-enter': 'atom-terminal-panel:toggle'

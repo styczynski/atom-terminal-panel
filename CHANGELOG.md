@@ -1,5 +1,8 @@
 ## Changelog
 
+* v4.3.0
+  * Repaired some bugs
+  * Developed better plugin system
 * v4.2.3
   * Moved changelog to the standalone file
   * Added another builtin plugin - math.coffee

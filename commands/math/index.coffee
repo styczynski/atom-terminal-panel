@@ -1,5 +1,5 @@
 vm = require 'vm'
-window.jqplotx = require '../ext/jquery.jqplot.min.js'
+require './jquery.jqplot.min.js'
 
 
 ###
@@ -49,8 +49,9 @@ module.exports =
         math_parser_sandbox.x = i
         points.push([i, vm.runInContext(args[2], math_parser_sandbox)])
       math_parser_sandbox.x = undefined
-      state.message '<div id="chart1" style="height:300px; width:500px;"></div>'
-      $.jqplot('chart1', [points], {
+      id = generateRandomID()
+      state.message '<div><div id="chart-'+id+'" style="height:300px; width:500px;"></div></div>'
+      $.jqplot('chart-'+id, [points], {
         series:[{showMarker:false}]
       })
       return null

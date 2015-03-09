@@ -252,18 +252,40 @@ class CommandOutputView extends View
       ret = @currentInputBoxCmp.getText()
     return ret
 
-  init: () ->
+  requireCSS: (location) ->
+    if not location?
+      return
+    location = resolve location
+    console.log ("Require atom-terminal-panel plugin CSS file: "+location+"\n") if atom.config.get('atom-terminal-panel.logConsole')
+    $('head').append "<link rel='stylesheet' type='text/css' href='#{location}'/>"
 
+  resolvePluginDependencies: (path, plugin) ->
+    config = plugin.dependencies
+    if not config?
+      return
+
+    css_dependencies = config.css
+    if not css_dependencies?
+      css_dependencies = []
+    for css_dependency in css_dependencies
+      @requireCSS path+"/"+css_dependency
+      
+    delete plugin['dependencies']
+
+
+  init: () ->
     normalizedPath = require("path").join(__dirname, "../commands");
     console.log ("Loading atom-terminal-panel plugins from the directory: "+normalizedPath+"\n") if atom.config.get('atom-terminal-panel.logConsole')
-    fs.readdirSync(normalizedPath).forEach( (file) =>
-      console.log ("Require atom-terminal-panel plugin: "+file+"\n") if atom.config.get('atom-terminal-panel.logConsole')
-      obj = require ("../commands/" +file)
-      console.log "File loaded."
+    fs.readdirSync(normalizedPath).forEach( (folder) =>
+      fullpath = resolve "../commands/" +folder
+      console.log ("Require atom-terminal-panel plugin: "+folder+"\n") if atom.config.get('atom-terminal-panel.logConsole')
+      obj = require ("../commands/" +folder+"/index.coffee")
+      console.log "Plugin loaded."
+      @resolvePluginDependencies fullpath, obj
       for key, value of obj
         @localCommands[key] = value
         @localCommands[key].source = 'external-functional'
-        @localCommands[key].sourcefile = @replaceAll '.coffee', '', file
+        @localCommands[key].sourcefile = folder
     )
     console.log ("All plugins were loaded.") if atom.config.get('atom-terminal-panel.logConsole')
 

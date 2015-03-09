@@ -22,3 +22,17 @@ module.exports =
     "command": (state, args)->
       (vm.runInThisContext args[0])
       return null
+  "web":
+    "description": "Shows any web page."
+    "params": "[ADDRESS]"
+    "command": (state, args)->
+      address = args.join(' ')
+      state.message "<iframe style='height:3000%;width:90%;' src='http://www.#{address}'></iframe>"
+      return null
+  "web-atom":
+    "description": "Shows any web page."
+    "params": "[ADDRESS]"
+    "command": (state, args)->
+      query = args.join(' ')
+      state.message "<iframe style='height:3000%;width:90%;' src='https://atom.io/packages/search?q=#{query}'></iframe>"
+      return null

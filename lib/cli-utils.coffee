@@ -19,3 +19,11 @@ window.include = (name) ->
     throw e
     throw "Dependency error. Module ["+name+"] cannot be required."
   return r
+
+window.generateRandomID = () ->
+  length = 32
+  chars = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
+  result = ''
+  for i in [length...1] by -1
+    result += chars[Math.round(Math.random() * (chars.length - 1))]
+  return result
