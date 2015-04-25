@@ -270,6 +270,10 @@ You can use the following properties in regex matches:
 
 You can use special annotation (on commands/rules definitions or in settings - command prompt message/current file path replacement) which is really powerful:
 
+(R - can be used in the rules user definitions)
+(T - can be directly typed to the terminal)
+(A - can be used from the terminal API)
+
 | Property name | Usage context | Description |
 |----------------------------------------------------------------------------------------------------|---------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | `%(project.root)` | R/T/A | Refers to the first currently opened project directory |
