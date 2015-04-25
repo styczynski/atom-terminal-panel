@@ -100,7 +100,7 @@ class Util
     if paths instanceof Array
       ret = ''
       for path in paths
-        fs.mkdir path
+        fs.mkdirSync path
         ret += 'Directory created \"'+path+'\"\n'
       return ret
     else
@@ -111,7 +111,7 @@ class Util
     if paths instanceof Array
       ret = ''
       for path in paths
-        fs.rmdir path
+        fs.rmdirSync path
         ret += 'Directory removed \"'+path+'\"\n'
       return ret
     else
@@ -119,7 +119,7 @@ class Util
 
   # Removes the given directory/-ies.
   rename: (oldpath, newpath) ->
-    fs.rename oldpath, newpath
+    fs.renameSync oldpath, newpath
     return 'File/directory renamed: '+oldpath+'\n'
 
 module.exports =

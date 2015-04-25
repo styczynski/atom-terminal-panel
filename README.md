@@ -206,7 +206,7 @@ Or more complex (and also more powerful) way:
 ```json
   "REGEXP" : {
     "match" : {
-      "matchLine": "true",
+      "matchLine": true,
       "replace": "REPLACEMENT"
     },
     "css": {
@@ -217,6 +217,46 @@ Or more complex (and also more powerful) way:
 ```
 
 The REGEXP will be replaced with REPLACEMENT and all the line with matched token will be colored to red(matchLine:true).
+
+You can also override default regular expression flags (default are: `gm`):
+
+```json
+"match": {
+  "flags": [ "g", "i" ]
+}
+```
+
+And specify how many lines under the match should be replaced:
+
+```json
+"match": {
+  "matchLine": true,
+  "matchNextLines": "3"
+}
+```
+
+This rule will be applied to the entire line with the match and the next 3 lines (below it).
+Note that, the `matchNextLines` option can be used only with `matchLine` set to `true`, otherwise it's got no meaning.
+
+#### Getting more from custom patterns
+
+You can event make your patterns to be applied to the html code.
+Adding the `forced` option to the `match`:
+```json
+"match": {
+  "forced": true
+}
+```
+
+From now your pattern will be applied to the html code, so it may seriously broke entire terminal output!
+The forced patterns must be carefully designed to correctly manipulate the html code.
+If you're a beginner you should do most things without using forced patterns.
+
+With forced rules you can make every `span` from console a `pre` block:
+
+```json
+
+```
 
 ### More about regex rules
 
@@ -230,31 +270,56 @@ You can use the following properties in regex matches:
 
 You can use special annotation (on commands/rules definitions or in settings - command prompt message/current file path replacement) which is really powerful:
 
-* `%(username) or %(user)` - refers to the currently logged user
-* `%(computer-name) or %(hostname)` - refers to the currently used computer name
-* `%(home)` - refers to the current user home directory (experimental, may be broken sometimes)
-* `%(path) or %(cwd)` - refers to the current working directory path
-* `%(atom)` - refers to the atom directory
-* `%(file)` - refers to the current file (its value depends on the usage context - you'll note :) )
-* `%(editor.file)/%(editor.path)/%(editor.name)` - refers to the file currenly opened in the editor (full path/directory/file name)
-* `%(line)` - refers to the input command number
-* `%(env.PROPERTY)` - refers to the node.js environmental variable called PROPERTY (to get the list of all available properties type `%(env.*)` into the terminal)[See node.js process_env](http://nodejs.org/api/process.html#process_process_env)
-* `%(command)` - refers to the lastly used command (experimental, may be broken)
-* `%(link)FILEPATH%(endlink)` - creates an interactive link for the given filepath
-* `%(day)/%(month)/%(year)/%(hours)/%(minutes)/%(seconds)/%(milis)` - refers to the current time
-* `%(hours12)/%(ampm)/%(AMPM)` - special variables used for 12-hours time format
-* `%(.day)/%(.month)/%(.year)/%(.hours)/%(.minutes)/%(.seconds)/%(.milis)/%(.hours12)` - refers to the current time (values without leading zeros)
-* `%(^...)` - text formatting modifiers (see text formatting)
-* `%(disc)` - refers to the current file disc location name
-* `%(path:0)/%(path:1)/%(path:2)...` - refers to the current file path component (path:0 is a disc name)
-* `%(path:-1)/%(path:-2)/%(path:-3)...` - refers to the current file component (numerated from the end) -     (path:-1 is the last path component)
-* `%(tooltip:CASUAL TEXT:content:TOOLTIP CONTENT)` - generates new tooltip component (TEXT and TOOLTIP cannot contain any special characters like brackets)
-* `%(label:TYPE:TEXT)` - creates new label (TYPE can be error, danger, warning, default, info, badge)
-* `%(0), %(1), %(2)...` - refers to the passed arguments
-* `%(0), %(1), %(2)...` - also refers to the capture groups in user defined colouring rules
-* `%(*)` - refers to the all passed arguments (concatenated arguments list) (can be used only in user commands definitions)
-* `%(*^)` - refers to the command string (command with all arguments) (can be used only in user commands definitions)
+| Property name | Usage context | Description |
+|----------------------------------------------------------------------------------------------------|---------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `%(project.root)` | R/T/A | Refers to the first currently opened project directory |
+| `%(project.count)` | R/T/A | Refers to the number of the currently opened project directories |
+| `%(project:[index])` | R/T/A | Refers to the choosen currently opened project directory |
+| `%(username)` `%(user)` | R/T/A | Refers to the currently logged user |
+| `%(computer-name)` `%(hostname)` | R/T/A | Refers to the currently used computer's name |
+| `%(home)` | R/T/A | Refers to the current user home directory (experimental) |
+| `%(path)` `%(cwd)`  | R/T/A | Refers to the current working directory path |
+| `%(atom)` | R/T/A | Refers to the atom directory |
+| `%(file)` | R/T/A | Refers to the current file - same as %(editor.file) |
+| `%(editor.file)` | R/T/A | Refers to the file currently opened in the editor (full path) |
+| `%(editor.path)` | R/T/A | Refers to the file currently opened in the editor (parent folder path) |
+| `%(editor.name)` | R/T/A | Refers to the file currently opened in the editor (file name) |
+| `%(line)` | T | Refers to the input command number (used for prompt styling) |
+| `%(env.[property])` | R/T/A | Refers to the node.js environmental variables - To get the list of all available system properties use `%(env.*)` ([See node.js process_env](http://nodejs.org/api/process.html#process_process_env)) |
+| `%(env.*)` | T | Refers to the list of all available environmental (native) properties ([See node.js process_env](http://nodejs.org/api/process.html#process_process_env)) |
+| `%(command)` | R/T/A | Refers to the lastly used command |
+| `%(link) [path] %(endlink)` | R/T/A | Creates dynamic terminal file linkage with the given file path. |
+| `%(day)` | R/T/A | Refers to the current system time (2-digit day number) |
+| `%(month)` | R/T/A | Refers to the current system time (2-digit month number) |
+| `%(year)` | R/T/A | Refers to the current system time (4-digit year number) |
+| `%(hours)` | R/T/A | Refers to the current system time (2-digit 24-hour format number) |
+| `%(minutes)` | R/T/A | Refers to the current system time (2-digit minutes number) |
+| `%(seconds)` | R/T/A | Refers to the current system time (2-digit seconds number) |
+| `%(milis)` | R/T/A | Refers to the current system time (2-digit miliseconds number) |
+| `%(hours12)` | R/T/A | Refers to the current system time (2-digit 12-hour format number) |
+| `%(ampm)` `%(AMPM)` | R/T/A | Refers to the am/pm /or AM/PM text (for 12-hour formats) |
+| `%(.day)` `%(.month)` `%(.year)` `%(.hours)` `%(.minutes)` `%(.seconds)` `%(.milis)` `%(.hours12)` | R/T/A | Refers to the time variables, but always skips leading zeros |
+| `%(^[formatter])` | R/T/A | Text formatting modifiers. |
+| `%(disc)` | R/T/A | Refers to the current working directory (disc name) |
+| `%(path:[index])` | R/T/A | Refers to the current working directory (access path breadcrumbs) |
+| `%(tooltip:[displayed text]:content:[tooltip content])` | R/T/A | Creates interactive tooltip (displayed text and tooltip content cannot contain any special characters) |
+| `%(label:[type]:[text])` | R/T/A | Creates interactive label (the text cannot caontain any spacial character) - the label types are: error, danger, warning, info, default, badge) |
+| `%([index])` | A | Refers to the parameters passed to the invoked command. |
+| `%([index])` | R | Refers to the regular expression catching group (group 0 is entire match) |
+| `%(content)` | R | Refers to the entire match found by the regular expression. |
+| `%(*)` | A | Refers to the all passed parameters. |
+| `%(*^)` | A | Refers to the command string (all passed arguments with the command name at the beginning) |
+| `%(^)` | R/T/A | Text formatting annotation (means end of the earlier used text modifier - each used modifier should have its own formatting end) |
+| `%(^#[hex color])` | R/T/A | Text formatting annotation (sets the colour of the text) |
+| `%(^b)` `%(^bold)` | R/T/A | Text formatting annotation (makes the text bolded) |
+| `%(^i)` `%(^italic)` | R/T/A | Text formatting annotation (creates text in italics) |
+| `%(^u)` `%(^underline)` | R/T/A | Text formatting annotation (makes the text underlined) |
+| `%(^l)` or `%(^line-through)` | R/T/A | Text formatting annotation (creates line through the text) |
 
+A few words about indexing in variables.
+The variable components are always indexed from 0, so `%(path:0)` refers to the first path component.
+You can also reference last element of the path using negative values: `%(path:-1)` is last element, `%(path:-2)` the seconds last etc.
+The same for referencing passed parameters - `%(INDEX)` and project directories - `%(project:INDEX)`.
 
 ### Text formatting
 
@@ -312,8 +377,8 @@ E.g:
 Simple like making a cup of fresh coffee...
 Just dot, extension name and CSS formatting.
 
-The ./commands director contains the plugins (you can add your own commands).
-Each plugin exports a list of all custom commands.
+The ./commands directory contains the plugins (you can add your own commands).
+Each plugin exports a list of all custom commands (each plugin directory must contain `index.coffee` file - its entry point, which looks like described below)
 E.g.
 ```coffeescript
 module.exports =
@@ -361,6 +426,7 @@ background-color: rgb(12, 12, 12);
 color: red;
 font-weight: bold;
 ```
+You can modify it to make the terminal look cooler.
 
 ## More about console
 
@@ -392,7 +458,7 @@ You can also call other useful console methods:
 * Make a more cool terminal cursor.
 * More interactive stuff
 * Maybe a little bash parser written in javascript?
-* Some about stdinput (which is really bad)
+* Some about stdinput (which is currently really bad)
 
 ## Example configuration
 
@@ -435,42 +501,50 @@ Note that after each config update you must call `update` command otherwise chan
     ]
   ],
   "rules": {
-    "(error|err):? (.*)": {
-      "match": {
-        "matchLine": "true",
-        "replace": "%(label:error:text:Error) %(0)"
-      },
-      "css": {
-        "color": "red",
-        "font-weight": "bold"
-      }
-    },
-    "(warning|warn|alert):? (.*)": {
-      "match": {
-        "matchLine": "true",
-        "replace": "%(label:warning:text:Warning) %(0)"
-      },
-      "css": {
-        "color": "yellow"
-      }
-    },
-    "(note|information):? (.*)": {
-      "match": {
-        "matchLine": "true",
-        "replace": "%(label:info:text:Info) %(0)"
-      },
-      "css": {}
-    },
-    "(debug|dbg):? (.*)": {
-      "match": {
-        "matchLine": "true",
-        "replace": "%(label:default:text:Debug) %(0)"
-      },
-      "css": {
-        "color": "gray"
-      }
-    }
-  }
+		"\\b[A-Z][A-Z]+\\b": {
+			"match": {
+				"flags": ["g"]
+			},
+			"css": {
+				"color":"gray"
+			}
+		},
+		"(error|err):? (.*)": {
+			"match": {
+				"matchLine": true,
+				"replace": "%(label:error:text:Error) %(0)"
+			},
+			"css": {
+				"color": "red",
+				"font-weight": "bold"
+			}
+		},
+		"(warning|warn|alert):? (.*)": {
+			"match": {
+				"matchLine": true,
+				"replace": "%(label:warning:text:Warning) %(0)"
+			},
+			"css": {
+				"color": "yellow"
+			}
+		},
+		"(note|info):? (.*)": {
+			"match": {
+				"matchLine": true,
+				"replace": "%(label:info:text:Info) %(0)"
+			},
+			"css": {}
+		},
+		"(debug|dbg):? (.*)": {
+			"match": {
+				"matchLine": true,
+				"replace": "%(label:default:text:Debug) %(0)"
+			},
+			"css": {
+				"color": "gray"
+			}
+		}
+	}
 }
 ```
 

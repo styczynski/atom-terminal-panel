@@ -2,7 +2,6 @@ require './cli-utils'
 
 {resolve, dirname, extname} = include 'path'
 fs = include 'fs'
-runner = include './cli-runner'
 
 class CliCore
 
@@ -34,9 +33,17 @@ class CliCore
             ["all available commands", "memdump", "Displays all available builtin commands. (all commands except native)"]
           ]
           rules: {
+            "\\b[A-Z][A-Z]+\\b": {
+              'match': {
+                'flags': ['g']
+              }
+              'css': {
+                'color':'gray'
+              }
+            }
             '(error|err):? (.*)': {
               'match': {
-                'matchLine': 'true'
+                'matchLine': true
                 'replace': '%(label:error:text:Error) %(0)'
               }
               'css': {
@@ -46,16 +53,16 @@ class CliCore
             }
             '(warning|warn|alert):? (.*)': {
               'match': {
-                'matchLine': 'true'
+                'matchLine': true
                 'replace': '%(label:warning:text:Warning) %(0)'
               }
               'css': {
                 'color': 'yellow'
               }
             }
-            '(note|information):? (.*)': {
+            '(note|info):? (.*)': {
               'match': {
-                'matchLine': 'true'
+                'matchLine': true
                 'replace': '%(label:info:text:Info) %(0)'
               }
               'css': {
@@ -64,7 +71,7 @@ class CliCore
             }
             '(debug|dbg):? (.*)': {
               'match': {
-                'matchLine': 'true'
+                'matchLine': true
                 'replace': '%(label:default:text:Debug) %(0)'
               }
               'css': {

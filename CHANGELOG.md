@@ -1,5 +1,10 @@
 ## Changelog
-
+* v4.3.2
+  * Repaired bugs with user-defined rules parsing
+  * Added new variables: `%(project.root)`, `%(project.count)` and `%(project:INDEX)` to
+  reference opened project directories
+  * Developed better regexp parsing rules (now regexp does not break html code)
+  * Still working on speeding up everything a little (highly unoptimised code)
 * v4.3.1
   * Repaired bugs...
 * v4.3.0

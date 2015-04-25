@@ -26,7 +26,8 @@ module.exports =
       TARGET_FILE = state.replaceAll '.cpp', '', TARGET_FILE
       TARGET_FILE = state.replaceAll '.c', '', TARGET_FILE
       ADDITIONAL_FLAGS = ""
-      return state.exec "#{COMPILER_NAME} #{COMPILER_FLAGS} \"#{SOURCE_FILE}\" -o \"#{TARGET_FILE}\" #{ADDITIONAL_FLAGS}", args, state
+      state.exec "#{COMPILER_NAME} #{COMPILER_FLAGS} \"#{SOURCE_FILE}\" -o \"#{TARGET_FILE}\" #{ADDITIONAL_FLAGS}", args, state
+      return ""
 
   "run":
     "params": "[name]"

@@ -14,9 +14,9 @@ CliCommandFinder = include './cli-command-finder'
 core = include './cli-core'
 stream = include 'stream'
 iconv = include 'iconv-lite'
-runner = include './cli-runner'
 include 'jquery-autocomplete-js'
-
+commandsBuiltins = include './cli-builtins-commands'
+variablesBuiltins = include './cli-builtins-variables'
 
 
 module.exports =
@@ -58,115 +58,7 @@ class CommandOutputView extends View
         @pre class: "terminal", outlet: "cliOutput"
 
   localCommandAtomBindings: []
-  localCommands:
-    "encode":
-      "params": "[encoding standard]"
-      "deprecated": true
-      "description": "Change encoding."
-      "command": (state, args)->
-        encoding = args[0]
-        state.streamsEncoding = encoding
-        state.message 'Changed encoding to '+encoding
-        return null
-    "ls":
-      "description": "Lists files in the current directory."
-      "command": (state, args)->
-        state.commandLineNotCounted()
-        if not state.ls args
-          return 'The directory is inaccessible.'
-          return null
-    "clear":
-      "description": "Clears the console output."
-      "command": (state, args)->
-        state.commandLineNotCounted()
-        state.clear()
-        return null
-    "echo":
-      "params": "[text]..."
-      "description": "Prints the message to the output."
-      "command": (state, args)->
-        if args?
-          state.message args.join(' ') + '\n'
-          return null
-        else
-          state.message '\n'
-          return null
-    "print":
-      "params": "[text]..."
-      "description": "Stringifies given parameters."
-      "command": (state, args)-> return JSON.stringify(args)
-    "cd":
-      "params": "[directory]"
-      "description": "Moves to the specified directory."
-      "command": (state, args)-> state.cd args
-    "new":
-      "description": "Creates a new file and opens it in the editor view."
-      "command": (state, args)->
-        if args == null || args == undefined
-          atom.workspaceView.trigger 'application:new-file'
-          return null
-        file_name = state.replaceAll '\"', '', args[0]
-        if file_name == null || file_name == undefined
-          atom.workspaceView.trigger 'application:new-file'
-          return null
-        else
-          file_path = state.resolvePath file_name
-          fs.closeSync(fs.openSync(file_path, 'w'))
-          state.delay () ->
-            atom.workspaceView.open file_path
-          return state.consoleLink file_path
-    "rm":
-      "params": "[file]"
-      "description": "Removes the given file."
-      "command": (state, args)->
-        filepath = state.resolvePath args[0]
-        fs.unlinkSync(filepath)
-        return state.consoleLink filepath
-    "memdump":
-      "description": "Displays a list of all available internally stored commands."
-      "command": (state, args)-> return state.getLocalCommandsMemdump()
-    "?":
-      "description": "Displays a list of all available internally stored commands."
-      "command": (state, args)->
-        return state.exec 'memdump', null, state
-    "exit":
-      "description": "Destroys the terminal session."
-      "command": (state, args)->
-        state.destroy()
-    "update":
-      "description": "Reloads the terminal configuration from terminal-commands.json"
-      "command": (state, args)->
-        core.reload()
-        return (state.consoleLabel 'info', 'info') + (state.consoleText 'info', 'The console settings were reloaded')
-    "reload":
-      "description": "Reloads the atom window."
-      "command": (state, args)->
-        atom.reload()
-    "edit":
-      "params": "[file]"
-      "description": "Opens the specified file in the editor view."
-      "command": (state, args)->
-        file_name = state.resolvePath args[0]
-        state.delay () ->
-          atom.workspaceView.open (file_name)
-        return state.consoleLink file_name
-    "link":
-      "params": "[file/directory]"
-      "description": "Displays interactive link to the given file/directory."
-      "command": (state, args)->
-        file_name = state.resolvePath args[0]
-        return state.consoleLink file_name
-    "l":
-      "params": "[file/directory]"
-      "description": "Displays interactive link to the given file/directory."
-      "command": (state, args)->
-        return state.exec 'link '+args[0], null, state
-    "info":
-      "description": "Prints the welcome message to the screen."
-      "command": (state, args)->
-        state.clear()
-        state.showInitMessage true
-        return null
+  localCommands: commandsBuiltins
 
   resolvePath: (path) ->
     path = @replaceAll '\"', '', path
@@ -325,199 +217,14 @@ class CommandOutputView extends View
   commandLineNotCounted: () ->
     @inputLine--
 
-  parseSpecialStringTemplate: (prompt, values) ->
-    cmd = null
-    file = @getCurrentFilePath()
-    if values?
-      if values.cmd?
-        cmd = values.cmd
-      if values.file?
-        file = values.file
-
-    if not atom.config.get('atom-terminal-panel.parseSpecialTemplateTokens')
-      return  @preserveOriginalPaths (prompt.replace /%\([^ ]*\)/ig, '')
-
-    if prompt.indexOf('%') == -1
-      return  @preserveOriginalPaths prompt
-
-    for key, value of values
-      if key != 'cmd' and key != 'file'
-        prompt = @replaceAll "%(#{key})", value, prompt
-
-    panelPath = atom.packages.resolvePackagePath 'atom-terminal-panel'
-    atomPath = resolve panelPath+'/../..'
-
-    prompt = @replaceAll '%(atom)', atomPath, prompt
-    prompt = @replaceAll '%(path)', @getCwd(), prompt
-    prompt = @replaceAll '%(file)', file, prompt
-    prompt = @replaceAll '%(editor.path)', @getCurrentFileLocation(), prompt
-    prompt = @replaceAll '%(editor.file)', @getCurrentFilePath(), prompt
-    prompt = @replaceAll '%(editor.name)', @getCurrentFileName(), prompt
-    prompt = @replaceAll '%(cwd)', @getCwd(), prompt
-    prompt = @replaceAll '%(hostname)', os.hostname(), prompt
-    prompt = @replaceAll '%(computer-name)', os.hostname(), prompt
-
-    username = process.env.USERNAME or process.env.LOGNAME or process.env.USER
-    prompt = @replaceAll '%(username)', username, prompt
-    prompt = @replaceAll '%(user)', username, prompt
-
-    homelocation = process.env.HOME or process.env.HOMEPATH or process.env.HOMEDIR
-    prompt = @replaceAll '%(home)', homelocation, prompt
-
-    osname = process.platform or process.env.OS
-    prompt = @replaceAll '%(osname)', osname, prompt
-    prompt = @replaceAll '%(os)', osname, prompt
-
-    prompt = prompt.replace /%\(env\.[A-Za-z\*]*\)/ig, (match, text, urlId) =>
-      nativeVarName = match
-      nativeVarName = @replaceAll '%(env.', '', nativeVarName
-      nativeVarName = nativeVarName.substring(0, nativeVarName.length-1)
-      if nativeVarName == '*'
-        ret = 'process.env {\n'
-        for key, value of process.env
-          ret += '\t' + key + '\n'
-        ret += '}'
-        return ret
-
-      return process.env[nativeVarName]
-
-
-    if cmd?
-      prompt = @replaceAll '%(command)', cmd, prompt
-    today = new Date()
-    day = today.getDate()
-    month = today.getMonth()+1
-    year = today.getFullYear()
-    minutes = today.getMinutes()
-    hours = today.getHours()
-    hours12 = today.getHours() % 12
-    milis = today.getMilliseconds()
-    seconds = today.getSeconds()
-    ampm = 'am'
-    ampmC = 'AM'
-
-    if hours >= 12
-      ampm = 'pm'
-      ampmC = 'PM'
-
-    prompt = @replaceAll '%(.day)', day, prompt
-    prompt = @replaceAll '%(.month)', month, prompt
-    prompt = @replaceAll '%(.year)', year, prompt
-    prompt = @replaceAll '%(.hours)', hours, prompt
-    prompt = @replaceAll '%(.hours12)', hours12, prompt
-    prompt = @replaceAll '%(.minutes)', minutes, prompt
-    prompt = @replaceAll '%(.seconds)', seconds, prompt
-    prompt = @replaceAll '%(.milis)', milis, prompt
-
-    if seconds < 10
-      seconds = '0' + seconds
-    if day < 10
-      day = '0' + day
-    if month < 10
-      month = '0' + month
-    if milis < 10
-      milis = '000' + milis
-    else if milis < 100
-      milis = '00' + milis
-    else if milis < 1000
-      milis = '0' + milis
-    if minutes < 10
-      minutes = '0' + minutes
-    if hours >= 12
-      ampm = 'pm'
-    if hours < 10
-      hours = '0' + hours
-    if hours12 < 10
-      hours12 = '0' + hours12
-
-    prompt = @replaceAll '%(day)', day, prompt
-    prompt = @replaceAll '%(month)', month, prompt
-    prompt = @replaceAll '%(year)', year, prompt
-    prompt = @replaceAll '%(hours)', hours, prompt
-    prompt = @replaceAll '%(hours12)', hours12, prompt
-    prompt = @replaceAll '%(ampm)', ampm, prompt
-    prompt = @replaceAll '%(AMPM)', ampmC, prompt
-    prompt = @replaceAll '%(minutes)', minutes, prompt
-    prompt = @replaceAll '%(seconds)', seconds, prompt
-    prompt = @replaceAll '%(milis)', milis, prompt
-    prompt = @replaceAll '%(line)', @inputLine+1, prompt
-
-    pathBreadcrumbs = @getCwd().split /\\|\//ig
-    pathBreadcrumbs[0] = pathBreadcrumbs[0].charAt(0).toUpperCase() + pathBreadcrumbs[0].slice(1)
-    disc = @replaceAll ':', '', pathBreadcrumbs[0]
-    prompt = @replaceAll '%(disc)', disc, prompt
-
-    pathBreadcrumbsSize = pathBreadcrumbs.length - 1
-    for i in [0..pathBreadcrumbsSize] by 1
-      breadcrumbIdFwd = i-pathBreadcrumbsSize-1
-      breadcrumbIdRwd = i
-      prompt = @replaceAll "%(path:#{breadcrumbIdFwd})", pathBreadcrumbs[i], prompt
-      prompt = @replaceAll "%(path:#{breadcrumbIdRwd})", pathBreadcrumbs[i], prompt
-
-    prompt = prompt.replace /%\(tooltip:[^\n\t\[\]{}%\)\(]*\)/ig, (match, text, urlId) =>
-      target = @replaceAll '%(tooltip:', '', match
-      target = target.substring 0, target.length-1
-      target_tokens = target.split ':content:'
-      target = target_tokens[0]
-      content = target_tokens[1]
-      return "<font data-toggle=\"tooltip\" data-placement=\"top\" title=\"#{target}\">#{content}</font>"
-
-    # /%\(link:[^\n\t\[\]{}%\)\(]*\)/ig
-
-    if prompt.indexOf('%(link:') != -1
-      throw 'Error:\nUsage of %(link:) is deprecated.\nUse %(link)target%(endlink) notation\ninstead of %(link:target)!\nAt: ['+prompt+']'
-
-    prompt = prompt.replace /%\(link\)[^%]*%\(endlink\)/ig, (match, text, urlId) =>
-      target = match
-      target = @replaceAll '%(link)', '', target
-      target = @replaceAll '%(endlink)', '', target
-      # target = target.substring 0, target.length-1
-      ret = @consoleLink target, true
-      return ret
-
-    prompt = prompt.replace /%\(\^[^\s\(\)]*\)/ig, (match, text, urlId) =>
-      target = @replaceAll '%(^', '', match
-      target = target.substring 0, target.length-1
-
-      if target == ''
-        return '</font>'
-      else if target.charAt(0) == '#'
-        return "<font style=\"color:#{target};\">"
-      else if target == 'b' or target == 'bold'
-        return "<font style=\"font-weight:bold;\">"
-      else if target == 'u' or target == 'underline'
-        return "<font style=\"text-decoration:underline;\">"
-      else if target == 'i' or target == 'italic'
-        return "<font style=\"font-style:italic;\">"
-      else if target == 'l' or target == 'line-through'
-        return "<font style=\"text-decoration:line-through;\">"
-      return ''
-
-    if atom.config.get 'atom-terminal-panel.enableConsoleLabels'
-      prompt = prompt.replace /%\(label:[^\n\t\[\]{}%\)\(]*\)/ig, (match, text, urlId) =>
-        target = @replaceAll '%(label:', '', match
-        target = target.substring 0, target.length-1
-        target_tokens = target.split ':text:'
-        target = target_tokens[0]
-        content = target_tokens[1]
-        return @consoleLabel target, content
-    else
-      prompt = prompt.replace /%\(label:[^\n\t\[\]{}%\)\(]*\)/ig, (match, text, urlId) =>
-        target = @replaceAll '%(label:', '', match
-        target = target.substring 0, target.length-1
-        target_tokens = target.split ':text:'
-        target = target_tokens[0]
-        content = target_tokens[1]
-        return content
-
-    return @preserveOriginalPaths prompt
-
+  parseSpecialStringTemplate: (prompt, values) =>
+    return variablesBuiltins.parse(this, prompt, values)
 
   getCommandPrompt: (cmd) ->
     return @parseTemplate atom.config.get('atom-terminal-panel.commandPrompt'), {cmd: cmd}
 
   delay: (callback, delay=100) ->
-    setTimeout callback, delay
+    setTimeout callback, delayconsoleInstancey
 
   execDelayedCommand: (delay, cmd, args, state) ->
     caller = this
@@ -616,7 +323,10 @@ class CommandOutputView extends View
           ret = null
           throw 'The console functional (not native) command cannot be executed without caller information: \''+cmd+'\'.'
         if command?
-          ret = command(state, args)
+          try
+            ret = command(state, args)
+          catch e
+            throw new Error "Error at executing terminal command: '#{cmd}' ('#{cmdStr}'): #{e.message}"
         if not ret?
           return null
         return ret
@@ -658,61 +368,7 @@ class CommandOutputView extends View
     return null
 
   getCommandsRegistry: () ->
-    global_vars = {
-      "%(atom)" : "atom directory."
-      "%(path)" : "current working directory"
-      "%(file)" : "currenly opened file in the editor"
-      "%(editor.path)" : "path of the file currently opened in the editor"
-      "%(editor.file)" : "full path of the file currently opened in the editor"
-      "%(editor.name)" : "name of the file currently opened in the editor"
-      "%(cwd)" : "current working directory"
-      "%(hostname)" : "computer name"
-      "%(computer-name)" : "computer name"
-      "%(username)" : "currently logged in user"
-      "%(user)" : "currently logged in user"
-      "%(home)" : "home directory of the user"
-      "%(osname)" : "name of the operating system"
-      "%(os)" : "name of the operating system"
-      "%(env.*)" : "list of all available native environment variables"
-      "%(.day)" : "current date: day number (without leading zeros)"
-      "%(.month)" : "current date: month number (without leading zeros)"
-      "%(.year)" : "current date: year (without leading zeros)"
-      "%(.hours)" : "current date: hour 24-format (without leading zeros)"
-      "%(.hours12)" : "current date: hour 12-format (without leading zeros)"
-      "%(.minutes)" : "current date: minutes (without leading zeros)"
-      "%(.seconds)" : "current date: seconds (without leading zeros)"
-      "%(.milis)" : "current date: miliseconds (without leading zeros)"
-      "%(day)" : "current date: day number"
-      "%(month)" : "current date: month number"
-      "%(year)" : "current date: year"
-      "%(hours)" : "current date: hour 24-format"
-      "%(hours12)" : "current date: hour 12-format"
-      "%(minutes)" : "current date: minutes"
-      "%(seconds)" : "current date: seconds"
-      "%(milis)" : "current date: miliseconds"
-      "%(ampm)" : "displays am/pm (12-hour format)"
-      "%(AMPM)" : "displays AM/PM (12-hour format)"
-      "%(line)" : "input line number"
-      "%(disc)" : "current working directory disc name"
-      "%(label:TYPE:TEXT": "(styling-annotation) creates a label of the specified type"
-      "%(tooltip:TEXT:content:CONTENT)": "(styling-annotation) creates a tooltip message"
-      "%(link)": "(styling-annotation) starts the file link - see %(endlink)"
-      "%(endlink)": "(styling-annotation) ends the file link - see %(link)"
-      "%(^)": "(styling-annotation) ends text formatting"
-      "%(^COLOR)": "(styling-annotation) creates coloured text"
-      "%(^b)": "(styling-annotation) creates bolded text"
-      "%(^bold)": "(styling-annotation) creates bolded text"
-      "%(^i)": "(styling-annotation) creates italics text"
-      "%(^italics)": "(styling-annotation) creates italics text"
-      "%(^u)": "(styling-annotation) creates underline text"
-      "%(^underline)": "(styling-annotation) creates underline text"
-      "%(^l)": "(styling-annotation) creates a line through the text"
-      "%(^line-trough)": "(styling-annotation) creates a line through the text"
-      "%(path:INDEX)": "refers to the %(path) components"
-      "%(*)": "(only user-defined commands) refers to the all passed parameters"
-      "%(*^)": "(only user-defined commands) refers to the full command string"
-      "%(NUMBER)": "(only user-defined commands) refers to the passed parameters"
-    }
+    global_vars = variablesBuiltins.list
 
     for key, value of process.env
       global_vars['%(env.'+key+')'] = "access native environment variable: "+key
@@ -923,11 +579,43 @@ class CommandOutputView extends View
     else
       _destroy()
 
+  terminateProcessTree: () ->
+    pid = @program.pid
+    psTree = require 'ps-tree'
+    killProcess = (pid, signal, callback) =>
+        signal   = signal || 'SIGKILL'
+        callback = callback || () -> {}
+        killTree = true
+        if killTree
+            psTree(pid, (err, children) =>
+                [pid].concat(
+                    children.map((p) =>
+                        return p.PID
+                    )
+                ).forEach((tpid) =>
+                    try
+                      process.kill tpid, signal
+                    catch ex
+
+                )
+                callback()
+            )
+        else
+          try
+            process.kill pid, signal
+          catch ex
+          callback()
+    killProcess pid, 'SIGINT'
+
+
+
   kill: ->
     if @program
-      @program.stdin.pause();
+      @terminateProcessTree @program.pid
+      @program.stdin.pause()
       @program.kill('SIGINT')
       @program.kill()
+      @message (@consoleLabel 'info', 'info')+(@consoleText 'info', 'Process has been stopped')
 
   open: ->
     if atom.config.get('atom-terminal-panel.moveToCurrentDirOnOpen')
@@ -1271,11 +959,23 @@ class CommandOutputView extends View
     text = @replaceAll '\\', '&bs;', text
     return text
 
+  parseMessage: (message, matchSpec=true, parseCustomRules=true) ->
+    instance = this
+    message = '<div>'+(instance.parseMessage_ message, false, true, true)+'</div>'
+    n = $(message)
+    n.contents().filter(() ->
+      return this.nodeType == 3
+    ).each(() ->
+      thiz = $(this)
+      out = thiz.text()
+      out = instance.parseMessage_ out, matchSpec, parseCustomRules
+      thiz.replaceWith('<span>'+out+'</span>')
+    )
+    return n.html()
 
-  parseMessage: (message, matchSpec=true) ->
+  parseMessage_: (message, matchSpec=true, parseCustomRules=true, isForcelyPreparsering=false) ->
     if message == null
       return ''
-
     if matchSpec
       if atom.config.get('atom-terminal-panel.XExperimentEnableForceLinking')
         if atom.config.get('atom-terminal-panel.textReplacementFileAdress')?
@@ -1324,40 +1024,51 @@ class CommandOutputView extends View
       replExp = '%(content)'
       matchAllLine = false
       matchNextLines = 0
+      flags = 'gm'
+      forceParse = false
 
       if value.match?
+        if value.match.flags?
+          flags = value.match.flags.join ''
         if value.match.replace?
           replExp = value.match.replace
         if value.match.matchLine?
           matchAllLine = value.match.matchLine
         if value.match.matchNextLines?
           matchNextLines = value.match.matchNextLines
+        if value.match.forced?
+          forceParse = value.match.forced
 
-      if matchAllLine
-        matchExp = '.*' + matchExp
+      if (forceParse or parseCustomRules) and ((isForcelyPreparsering and forceParse) or (not isForcelyPreparsering))
+        if matchAllLine
+          matchExp = '.*' + matchExp
 
-      for i in [0..matchNextLines] by 1
-        matchExp = matchExp + '[\\r\\n].*';
+        if matchNextLines > 0
+          for i in [0..matchNextLines] by 1
+            matchExp = matchExp + '[\\r\\n].*';
 
-      regex = new RegExp(matchExp, 'igm')
+        regex = new RegExp(matchExp, flags)
 
-      message = message.replace regex, (match, groups...) =>
+        message = message.replace regex, (match, groups...) =>
+          style = ''
+          if value.css?
+            style = core.jsonCssToInlineStyle value.css
+          else if not value.match?
+            style = core.jsonCssToInlineStyle value
+          vars =
+            content: match
+            0: match
 
-        style = ''
-        if value.css?
-          style = core.jsonCssToInlineStyle value.css
-        else if not value.match?
-          style = core.jsonCssToInlineStyle value
-        vars =
-          content: match
-          0: match
+          groupsNumber = groups.length-1
+          for i in [0..groupsNumber] by 1
+            vars[i+1] = groups[i]
+          for i in [0..50] by 1
+            if not vars[i+1]?
+              vars[i+1] = ""
 
-        groupsNumber = groups.length-1
-        for i in [0..groupsNumber] by 1
-          vars[i+1] = groups[i]
-
-        repl = @parseSpecialStringTemplate replExp, vars
-        return "<font style=\"#{style}\">#{repl}</font>"
+          console.log 'Active rule => '+matchExp
+          repl = @parseSpecialStringTemplate replExp, vars
+          return "<font style=\"#{style}\">#{repl}</font>"
 
     message = @replaceAll '%(file-original)', @getCurrentFilePath(), message
     message = @replaceAll '%(cwd-original)', @getCwd(), message
@@ -1374,6 +1085,8 @@ class CommandOutputView extends View
     # @parseSpecialNodes()
 
   message: (message, matchSpec=true) ->
+    if not message?
+      return
     mes = message.split '%(break)'
     if mes.length > 1
       for m in mes
@@ -1382,7 +1095,7 @@ class CommandOutputView extends View
     else
       mes = mes[0]
 
-    mes = @parseMessage message, matchSpec
+    mes = @parseMessage message, matchSpec, matchSpec
     # mes = @replaceAll '<', '&lt;', mes
     # mes = @replaceAll '>', '&gt;', mes
     @cliOutput.append mes
@@ -1423,19 +1136,35 @@ class CommandOutputView extends View
     return @correctFilePath cwd
 
   spawn: (inputCmd, cmd, args) ->
-    # @cmdEditor.hide()
-    # htmlStream = ansihtml()
-    htmlStream = iconv.decodeStream @streamsEncoding
+    ## @cmdEditor.hide()
+    ## htmlStream = ansihtml()
+    # htmlStream = iconv.decodeStream @streamsEncoding
+    # htmlStream.on 'data', (data) =>
+    ## @cliOutput.append data
+    # @message data
+    # @scrollToBottom()
+    # try
+    ## @program = spawn cmd, args, stdio: 'pipe', env: process.env, cwd: @getCwd()
+    # @program = exec inputCmd, stdio: 'pipe', env: process.env, cwd: @getCwd()
+    ## @program.stdin.pipe htmlStream
+    # @program.stdout.pipe htmlStream
+    # @program.stderr.pipe htmlStream
+    ## @program.stdout.setEncoding @streamsEncoding
+
+    instance = this
+    dataCallback = (data) ->
+      instance.message(data)
+      instance.scrollToBottom()
+
+    htmlStream = ansihtml()
     htmlStream.on 'data', (data) =>
-      @cliOutput.append data
-      @scrollToBottom()
+      setTimeout ()->
+        dataCallback(data);
+      , 100
     try
-      # @program = spawn cmd, args, stdio: 'pipe', env: process.env, cwd: @getCwd()
       @program = exec inputCmd, stdio: 'pipe', env: process.env, cwd: @getCwd()
-      @program.stdin.pipe htmlStream
       @program.stdout.pipe htmlStream
       @program.stderr.pipe htmlStream
-      # @program.stdout.setEncoding @streamsEncoding
 
       removeClass @statusIcon, 'status-success'
       removeClass @statusIcon, 'status-error'
