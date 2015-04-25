@@ -1,5 +1,5 @@
 ## Changelog
-* v4.3.2
+* v4.4.0
   * Repaired bugs with user-defined rules parsing
   * Added new variables: `%(project.root)`, `%(project.count)` and `%(project:INDEX)` to
   reference opened project directories
