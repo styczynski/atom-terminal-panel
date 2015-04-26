@@ -1,3 +1,16 @@
+###
+  Atom-terminal-panel
+  Copyright by isis97
+  MIT licensed
+
+  Terminal utility for doing simple stuff (like filesystem manip).
+  The Util API can be accessed by the terminal plugins
+  by calling state.util, e.g.
+    "command": (state, args) ->
+      state.util.rmdir './temp'
+
+###
+
 require './cli-utils'
 
 fs = include 'fs'
@@ -5,17 +18,24 @@ fs = include 'fs'
 
 class Util
 
+  #
+  # Escapes the given regular expression string.
+  #
   escapeRegExp: (string) ->
     if string == null
       return null
     return string.replace(/([.*+?^=!:${}()|\[\]\/\\])/g, "\\$1");
 
+  #
+  # Replaces all occurrences of the 'find' string with the 'replace' replacement in
+  # the 'str' text.
+  #
   replaceAll: (find, replace, str) ->
     if not str?
       return null
-    if not replace?
+    if not str.replace?
       return str
-    return str.replace(new RegExp(@escapeRegExp(find), 'g'), replace);
+    return str.replace(new RegExp(@escapeRegExp(find), 'g'), replace)
 
   # If the file begins with ./ it will be redirected to the given cwd directory.
   # This method accepts also path arrays.
@@ -115,7 +135,7 @@ class Util
         ret += 'Directory removed \"'+path+'\"\n'
       return ret
     else
-      return @mkdir [paths]
+      return @rkdir [paths]
 
   # Removes the given directory/-ies.
   rename: (oldpath, newpath) ->

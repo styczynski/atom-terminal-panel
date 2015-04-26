@@ -1,3 +1,11 @@
+###
+  Atom-terminal-panel
+  Copyright by isis97
+  MIT licensed
+
+  Class containing all builtin commands.
+###
+
 require './cli-utils'
 core = include './cli-core'
 

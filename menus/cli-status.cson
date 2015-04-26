@@ -1,4 +1,11 @@
-# See https://atom.io/docs/latest/creating-a-package#menus for more details
+###
+  Atom-terminal-panel
+  Copyright by isis97
+  MIT licensed
+
+  Menu for the plugin.
+###
+
 'menu': [
   {
     'label': 'Packages'
@@ -9,7 +16,6 @@
         { 'label': 'Toggle', 'command': 'terminal-panel:toggle' }
         { 'label': 'Prev', 'command': 'terminal-panel:prev' }
         { 'label': 'Next', 'command': 'terminal-panel:next' }
-        { 'label': 'Compile', 'command': 'terminal-panel:compile'}
       ]
     ]
   }

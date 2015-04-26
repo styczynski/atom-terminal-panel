@@ -1,12 +1,12 @@
-# Keybindings require three things to be fully defined: A selector that is
-# matched against the focused element, the keystroke and the command to
-# execute.
-#
-# Below is a basic keybinding which registers on all platforms by applying to
-# the root workspace element.
+###
+  Atom-terminal-panel
+  Copyright by isis97
+  MIT licensed
 
-# For more detailed documentation see
-# https://atom.io/docs/latest/advanced/keymaps
+  Keybindings for the plugin.
+###
+
+
 '.platform-darwin atom-workspace':
   'shift-enter': 'atom-terminal-panel:toggle'
   'cmd-shift-t': 'atom-terminal-panel:new'
@@ -26,7 +26,6 @@
 '.cli-status':
   'cmd-c': 'native!'
   'ctrl-c': 'native!'
-  'f11': 'atom-terminal-panel:compile'
 
 '.cli-panel-body':
   'escape': 'atom-terminal-panel:toggle'

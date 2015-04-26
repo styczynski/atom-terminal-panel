@@ -1,3 +1,11 @@
+###
+  Atom-terminal-panel
+  Copyright by isis97
+  MIT licensed
+
+  Class containing all builtin variables.
+###
+
 {resolve, dirname, extname} = include 'path'
 os = include 'os'
 
@@ -59,6 +67,15 @@ class BuiltinVariables
     "%(*)": "(only user-defined commands) refers to the all passed parameters"
     "%(*^)": "(only user-defined commands) refers to the full command string"
     "%(INDEX)": "(only user-defined commands) refers to the passed parameters"
+  customVariables: []
+
+  putVariable: (entry) ->
+    @customVariables.push entry
+    @list['%('+entry.name+')'] = entry.description or ""
+
+  removeAnnotation: (consoleInstance, prompt) ->
+    return prompt.replace /%\([^\(\)]*\)/img, (match, text, urlId) =>
+      return ''
 
   parse: (consoleInstance, prompt, values) ->
     cmd = null
@@ -77,35 +94,35 @@ class BuiltinVariables
 
     for key, value of values
       if key != 'cmd' and key != 'file'
-        prompt = consoleInstance.replaceAll "%(#{key})", value, prompt
+        prompt = consoleInstance.util.replaceAll "%(#{key})", value, prompt
 
     panelPath = atom.packages.resolvePackagePath 'atom-terminal-panel'
     atomPath = resolve panelPath+'/../..'
 
-    prompt = consoleInstance.replaceAll '%(atom)', atomPath, prompt
-    prompt = consoleInstance.replaceAll '%(path)', consoleInstance.getCwd(), prompt
-    prompt = consoleInstance.replaceAll '%(file)', file, prompt
-    prompt = consoleInstance.replaceAll '%(editor.path)', consoleInstance.getCurrentFileLocation(), prompt
-    prompt = consoleInstance.replaceAll '%(editor.file)', consoleInstance.getCurrentFilePath(), prompt
-    prompt = consoleInstance.replaceAll '%(editor.name)', consoleInstance.getCurrentFileName(), prompt
-    prompt = consoleInstance.replaceAll '%(cwd)', consoleInstance.getCwd(), prompt
-    prompt = consoleInstance.replaceAll '%(hostname)', os.hostname(), prompt
-    prompt = consoleInstance.replaceAll '%(computer-name)', os.hostname(), prompt
+    prompt = consoleInstance.util.replaceAll '%(atom)', atomPath, prompt
+    prompt = consoleInstance.util.replaceAll '%(path)', consoleInstance.getCwd(), prompt
+    prompt = consoleInstance.util.replaceAll '%(file)', file, prompt
+    prompt = consoleInstance.util.replaceAll '%(editor.path)', consoleInstance.getCurrentFileLocation(), prompt
+    prompt = consoleInstance.util.replaceAll '%(editor.file)', consoleInstance.getCurrentFilePath(), prompt
+    prompt = consoleInstance.util.replaceAll '%(editor.name)', consoleInstance.getCurrentFileName(), prompt
+    prompt = consoleInstance.util.replaceAll '%(cwd)', consoleInstance.getCwd(), prompt
+    prompt = consoleInstance.util.replaceAll '%(hostname)', os.hostname(), prompt
+    prompt = consoleInstance.util.replaceAll '%(computer-name)', os.hostname(), prompt
 
     username = process.env.USERNAME or process.env.LOGNAME or process.env.USER
-    prompt = consoleInstance.replaceAll '%(username)', username, prompt
-    prompt = consoleInstance.replaceAll '%(user)', username, prompt
+    prompt = consoleInstance.util.replaceAll '%(username)', username, prompt
+    prompt = consoleInstance.util.replaceAll '%(user)', username, prompt
 
     homelocation = process.env.HOME or process.env.HOMEPATH or process.env.HOMEDIR
-    prompt = consoleInstance.replaceAll '%(home)', homelocation, prompt
+    prompt = consoleInstance.util.replaceAll '%(home)', homelocation, prompt
 
     osname = process.platform or process.env.OS
-    prompt = consoleInstance.replaceAll '%(osname)', osname, prompt
-    prompt = consoleInstance.replaceAll '%(os)', osname, prompt
+    prompt = consoleInstance.util.replaceAll '%(osname)', osname, prompt
+    prompt = consoleInstance.util.replaceAll '%(os)', osname, prompt
 
     prompt = prompt.replace /%\(env\.[A-Za-z_\*]*\)/ig, (match, text, urlId) =>
       nativeVarName = match
-      nativeVarName = consoleInstance.replaceAll '%(env.', '', nativeVarName
+      nativeVarName = consoleInstance.util.replaceAll '%(env.', '', nativeVarName
       nativeVarName = nativeVarName.substring(0, nativeVarName.length-1)
       if nativeVarName == '*'
         ret = 'process.env {\n'
@@ -118,7 +135,7 @@ class BuiltinVariables
 
 
     if cmd?
-      prompt = consoleInstance.replaceAll '%(command)', cmd, prompt
+      prompt = consoleInstance.util.replaceAll '%(command)', cmd, prompt
     today = new Date()
     day = today.getDate()
     month = today.getMonth()+1
@@ -135,14 +152,14 @@ class BuiltinVariables
       ampm = 'pm'
       ampmC = 'PM'
 
-    prompt = consoleInstance.replaceAll '%(.day)', day, prompt
-    prompt = consoleInstance.replaceAll '%(.month)', month, prompt
-    prompt = consoleInstance.replaceAll '%(.year)', year, prompt
-    prompt = consoleInstance.replaceAll '%(.hours)', hours, prompt
-    prompt = consoleInstance.replaceAll '%(.hours12)', hours12, prompt
-    prompt = consoleInstance.replaceAll '%(.minutes)', minutes, prompt
-    prompt = consoleInstance.replaceAll '%(.seconds)', seconds, prompt
-    prompt = consoleInstance.replaceAll '%(.milis)', milis, prompt
+    prompt = consoleInstance.util.replaceAll '%(.day)', day, prompt
+    prompt = consoleInstance.util.replaceAll '%(.month)', month, prompt
+    prompt = consoleInstance.util.replaceAll '%(.year)', year, prompt
+    prompt = consoleInstance.util.replaceAll '%(.hours)', hours, prompt
+    prompt = consoleInstance.util.replaceAll '%(.hours12)', hours12, prompt
+    prompt = consoleInstance.util.replaceAll '%(.minutes)', minutes, prompt
+    prompt = consoleInstance.util.replaceAll '%(.seconds)', seconds, prompt
+    prompt = consoleInstance.util.replaceAll '%(.milis)', milis, prompt
 
     if seconds < 10
       seconds = '0' + seconds
@@ -165,42 +182,42 @@ class BuiltinVariables
     if hours12 < 10
       hours12 = '0' + hours12
 
-    prompt = consoleInstance.replaceAll '%(day)', day, prompt
-    prompt = consoleInstance.replaceAll '%(month)', month, prompt
-    prompt = consoleInstance.replaceAll '%(year)', year, prompt
-    prompt = consoleInstance.replaceAll '%(hours)', hours, prompt
-    prompt = consoleInstance.replaceAll '%(hours12)', hours12, prompt
-    prompt = consoleInstance.replaceAll '%(ampm)', ampm, prompt
-    prompt = consoleInstance.replaceAll '%(AMPM)', ampmC, prompt
-    prompt = consoleInstance.replaceAll '%(minutes)', minutes, prompt
-    prompt = consoleInstance.replaceAll '%(seconds)', seconds, prompt
-    prompt = consoleInstance.replaceAll '%(milis)', milis, prompt
-    prompt = consoleInstance.replaceAll '%(line)', consoleInstance.inputLine+1, prompt
+    prompt = consoleInstance.util.replaceAll '%(day)', day, prompt
+    prompt = consoleInstance.util.replaceAll '%(month)', month, prompt
+    prompt = consoleInstance.util.replaceAll '%(year)', year, prompt
+    prompt = consoleInstance.util.replaceAll '%(hours)', hours, prompt
+    prompt = consoleInstance.util.replaceAll '%(hours12)', hours12, prompt
+    prompt = consoleInstance.util.replaceAll '%(ampm)', ampm, prompt
+    prompt = consoleInstance.util.replaceAll '%(AMPM)', ampmC, prompt
+    prompt = consoleInstance.util.replaceAll '%(minutes)', minutes, prompt
+    prompt = consoleInstance.util.replaceAll '%(seconds)', seconds, prompt
+    prompt = consoleInstance.util.replaceAll '%(milis)', milis, prompt
+    prompt = consoleInstance.util.replaceAll '%(line)', consoleInstance.inputLine+1, prompt
 
     projectPaths = atom.project.getPaths()
     projectPathsCount = projectPaths.length - 1
-    prompt = consoleInstance.replaceAll '%(project.root)', projectPaths[0], prompt
-    prompt = consoleInstance.replaceAll '%(project.count)', projectPaths.length, prompt
+    prompt = consoleInstance.util.replaceAll '%(project.root)', projectPaths[0], prompt
+    prompt = consoleInstance.util.replaceAll '%(project.count)', projectPaths.length, prompt
     for i in [0..projectPathsCount] by 1
       breadcrumbIdFwd = i-projectPathsCount-1
       breadcrumbIdRwd = i
-      prompt = consoleInstance.replaceAll "%(project:#{breadcrumbIdFwd})", projectPaths[i], prompt
-      prompt = consoleInstance.replaceAll "%(project:#{breadcrumbIdRwd})", projectPaths[i], prompt
+      prompt = consoleInstance.util.replaceAll "%(project:#{breadcrumbIdFwd})", projectPaths[i], prompt
+      prompt = consoleInstance.util.replaceAll "%(project:#{breadcrumbIdRwd})", projectPaths[i], prompt
 
     pathBreadcrumbs = consoleInstance.getCwd().split /\\|\//ig
     pathBreadcrumbs[0] = pathBreadcrumbs[0].charAt(0).toUpperCase() + pathBreadcrumbs[0].slice(1)
-    disc = consoleInstance.replaceAll ':', '', pathBreadcrumbs[0]
-    prompt = consoleInstance.replaceAll '%(disc)', disc, prompt
+    disc = consoleInstance.util.replaceAll ':', '', pathBreadcrumbs[0]
+    prompt = consoleInstance.util.replaceAll '%(disc)', disc, prompt
 
     pathBreadcrumbsSize = pathBreadcrumbs.length - 1
     for i in [0..pathBreadcrumbsSize] by 1
       breadcrumbIdFwd = i-pathBreadcrumbsSize-1
       breadcrumbIdRwd = i
-      prompt = consoleInstance.replaceAll "%(path:#{breadcrumbIdFwd})", pathBreadcrumbs[i], prompt
-      prompt = consoleInstance.replaceAll "%(path:#{breadcrumbIdRwd})", pathBreadcrumbs[i], prompt
+      prompt = consoleInstance.util.replaceAll "%(path:#{breadcrumbIdFwd})", pathBreadcrumbs[i], prompt
+      prompt = consoleInstance.util.replaceAll "%(path:#{breadcrumbIdRwd})", pathBreadcrumbs[i], prompt
 
     prompt = prompt.replace /%\(tooltip:[^\n\t\[\]{}%\)\(]*\)/ig, (match, text, urlId) =>
-      target = consoleInstance.replaceAll '%(tooltip:', '', match
+      target = consoleInstance.util.replaceAll '%(tooltip:', '', match
       target = target.substring 0, target.length-1
       target_tokens = target.split ':content:'
       target = target_tokens[0]
@@ -214,14 +231,14 @@ class BuiltinVariables
 
     prompt = prompt.replace /%\(link\)[^%]*%\(endlink\)/ig, (match, text, urlId) =>
       target = match
-      target = consoleInstance.replaceAll '%(link)', '', target
-      target = consoleInstance.replaceAll '%(endlink)', '', target
+      target = consoleInstance.util.replaceAll '%(link)', '', target
+      target = consoleInstance.util.replaceAll '%(endlink)', '', target
       # target = target.substring 0, target.length-1
       ret = consoleInstance.consoleLink target, true
       return ret
 
     prompt = prompt.replace /%\(\^[^\s\(\)]*\)/ig, (match, text, urlId) =>
-      target = consoleInstance.replaceAll '%(^', '', match
+      target = consoleInstance.util.replaceAll '%(^', '', match
       target = target.substring 0, target.length-1
 
       if target == ''
@@ -240,7 +257,7 @@ class BuiltinVariables
 
     if atom.config.get 'atom-terminal-panel.enableConsoleLabels'
       prompt = prompt.replace /%\(label:[^\n\t\[\]{}%\)\(]*\)/ig, (match, text, urlId) =>
-        target = consoleInstance.replaceAll '%(label:', '', match
+        target = consoleInstance.util.replaceAll '%(label:', '', match
         target = target.substring 0, target.length-1
         target_tokens = target.split ':text:'
         target = target_tokens[0]
@@ -248,14 +265,20 @@ class BuiltinVariables
         return consoleInstance.consoleLabel target, content
     else
       prompt = prompt.replace /%\(label:[^\n\t\[\]{}%\)\(]*\)/ig, (match, text, urlId) =>
-        target = consoleInstance.replaceAll '%(label:', '', match
+        target = consoleInstance.util.replaceAll '%(label:', '', match
         target = target.substring 0, target.length-1
         target_tokens = target.split ':text:'
         target = target_tokens[0]
         content = target_tokens[1]
         return content
 
-    return consoleInstance.preserveOriginalPaths prompt
+    for entry in @customVariables
+      if prompt.indexOf('%('+entry.name+')') > -1
+        repl = entry.variable(consoleInstance)
+        if repl?
+          prompt = consoleInstance.util.replaceAll '%('+entry.name+')', repl, prompt
+
+    return @removeAnnotation( consoleInstance, consoleInstance.preserveOriginalPaths prompt )
 
 module.exports =
   new BuiltinVariables()

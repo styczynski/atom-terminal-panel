@@ -1,3 +1,11 @@
+###
+  Atom-terminal-panel
+  Copyright by isis97
+  MIT licensed
+
+  The panel, which manages all the terminal instances.
+###
+
 require './cli-utils'
 
 {View} = include 'atom-space-pen-views'

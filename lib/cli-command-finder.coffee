@@ -1,3 +1,11 @@
+###
+  Atom-terminal-panel
+  Copyright by isis97
+  MIT licensed
+
+  'Command finder' view, which lists all available commands and variables.
+###
+
 require './cli-utils'
 
 {SelectListView, $$} = include 'atom-space-pen-views'

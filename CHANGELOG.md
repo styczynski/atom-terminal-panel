@@ -1,4 +1,11 @@
 ## Changelog
+* v4.4.1
+  * Added ability to bind the keys to the commands! :D
+  * Made the terminal resizeable!
+  * Added more variables and stuff.
+  * Added `terminal` command (only Windows) - starts new cmd session in the cwd
+  * Repaired old bugs with some buggy stuff...
+  * Added ability to create plugins, which exports the custom variables
 * v4.4.0
   * Repaired bugs with user-defined rules parsing
   * Added new variables: `%(project.root)`, `%(project.count)` and `%(project:INDEX)` to

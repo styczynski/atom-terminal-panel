@@ -1,4 +1,10 @@
+###
+  Atom-terminal-panel
+  Copyright by isis97
+  MIT licensed
 
+  This file contains basic, simple utilities used by coffeescript files.
+###
 
 window.include = (name) ->
   if not window.cliUtilsIncludeLog?

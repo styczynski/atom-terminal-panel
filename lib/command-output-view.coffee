@@ -1,3 +1,11 @@
+###
+  Atom-terminal-panel
+  Copyright by isis97
+  MIT licensed
+
+  The main terminal view class, which does the most of all work.
+###
+
 require './cli-utils'
 
 {TextEditorView, View} = include 'atom-space-pen-views'
@@ -8,7 +16,7 @@ readline = include 'readline'
 {resolve, dirname, extname} = include 'path'
 fs = include 'fs'
 os = include 'os'
-window.$ = window.jQuery = include('atom').$
+window.$ = window.jQuery = include 'jquery'
 lastOpenedView = null
 CliCommandFinder = include './cli-command-finder'
 core = include './cli-core'
@@ -41,6 +49,7 @@ class CommandOutputView extends View
   }
   @content: ->
     @div tabIndex: -1, class: 'panel cli-status panel-bottom', =>
+      @div class: 'terminal panel-divider', style: 'cursor:n-resize;width:100%;height:8px;box-shadow: 0 2px 3px 0px #39CCCC;', outlet: 'panelDivider'
       @div class: 'panel-heading btn-toolbar', outlet:'consoleToolbarHeading', =>
         @div class: 'btn-group', outlet:'consoleToolbar', =>
           @button outlet: 'killBtn', click: 'kill', class: 'btn hide', =>
@@ -60,15 +69,32 @@ class CommandOutputView extends View
   localCommandAtomBindings: []
   localCommands: commandsBuiltins
 
+  os: () ->
+    isWindows = false
+    isMac = false
+    isLinux = false
+    osname = process.platform or process.env.OS
+    if /^win/igm.test osname
+      isWindows = true
+    else if /^darwin/igm.test osname
+      isMac = true
+    else if /^linux/igm.test osname
+      isLinux = true
+    return {
+      windows: isWindows
+      mac: isMac
+      linux: isLinux
+    }
+
   resolvePath: (path) ->
-    path = @replaceAll '\"', '', path
+    path = @util.replaceAll '\"', '', path
     filepath = ''
     if path.match(/([A-Za-z]):/ig) != null
       filepath = path
     else
       filepath = @getCwd() + '/' + path
-    filepath = @replaceAll '\\', '/', filepath
-    return @replaceAll '\\', '/', (resolve filepath)
+    filepath = @util.replaceAll '\\', '/', filepath
+    return @util.replaceAll '\\', '/', (resolve filepath)
 
   reloadSettings: () ->
     @onCommand 'update'
@@ -95,6 +121,9 @@ class CommandOutputView extends View
       .val("")
       .val(val)
 
+  removeInputBox: () ->
+    @cliOutput.find('.cli-dynamic-input-box').remove()
+
   putInputBox: () ->
     if @currentInputBoxTmr?
       clearInterval @currentInputBoxTmr
@@ -112,6 +141,8 @@ class CommandOutputView extends View
     @currentInputBox.keypress (e) =>
        code = e.keyCode or e.which
        if code == @keyCodes.enter
+         #@removeInputBox()
+         # @putInputBox()
          @onCommand()
 
     @cliOutput.click () =>
@@ -166,6 +197,25 @@ class CommandOutputView extends View
 
 
   init: () ->
+
+    lastY = -1
+    mouseDown = false
+    panelDraggingActive = false
+    @panelDivider
+    .on 'mousedown', () => panelDraggingActive = true
+    .on 'mouseup', () => panelDraggingActive = false
+    $(document)
+    .on 'mousedown', () => mouseDown = true
+    .on 'mouseup', () => mouseDown = false
+    .on 'mousemove', (e) =>
+      if mouseDown and panelDraggingActive
+        if lastY != -1
+          delta = e.pageY - lastY
+          @cliOutput.height @cliOutput.height()-delta
+        lastY = e.pageY
+      else
+        lastY = -1
+
     normalizedPath = require("path").join(__dirname, "../commands")
     console.log ("Loading atom-terminal-panel plugins from the directory: "+normalizedPath+"\n") if atom.config.get('atom-terminal-panel.logConsole')
     fs.readdirSync(normalizedPath).forEach( (folder) =>
@@ -175,11 +225,26 @@ class CommandOutputView extends View
       console.log "Plugin loaded."
       @resolvePluginDependencies fullpath, obj
       for key, value of obj
-        @localCommands[key] = value
-        @localCommands[key].source = 'external-functional'
-        @localCommands[key].sourcefile = folder
+        if value.command?
+          @localCommands[key] = value
+          @localCommands[key].source = 'external-functional'
+          @localCommands[key].sourcefile = folder
+        else if value.variable?
+          value.name = key
+          variablesBuiltins.putVariable value
     )
     console.log ("All plugins were loaded.") if atom.config.get('atom-terminal-panel.logConsole')
+
+    if core.getConfig()?
+      actions = core.getConfig().actions
+      if actions?
+        for action in actions
+          if action.length > 1
+            obj = {}
+            obj['atom-terminal-panel:'+action[0]] = () =>
+              @open()
+              @onCommand action[1]
+            atom.commands.add 'atom-workspace', obj
 
     eleqr = atom.workspace.getActivePaneItem() ? atom.workspace
     eleqr = atom.views.getView(eleqr)
@@ -199,18 +264,18 @@ class CommandOutputView extends View
       com.source = "internal-atom"
       @localCommands[comName] = com
 
-    if core.getConfig()?
-      toolbar = core.getConfig().toolbar
-      if toolbar?
-        for com in toolbar
-          bt = $("<div class=\"btn\" data-action=\"#{com[1]}\" ><span>#{com[0]}</span></div>")
-          if com[2]?
-            atom.tooltips.add bt,
-              title: com[2]
-          @consoleToolbar.prepend bt
-          caller = this
-          bt.click () ->
-            caller.onCommand $(this).data('action')
+    toolbar = core.getConfig().toolbar
+    if toolbar?
+      toolbar.reverse()
+      for com in toolbar
+        bt = $("<div class=\"btn\" data-action=\"#{com[1]}\" ><span>#{com[0]}</span></div>")
+        if com[2]?
+          atom.tooltips.add bt,
+            title: com[2]
+        @consoleToolbar.prepend bt
+        caller = this
+        bt.click () ->
+          caller.onCommand $(this).data('action')
 
     return this
 
@@ -224,7 +289,7 @@ class CommandOutputView extends View
     return @parseTemplate atom.config.get('atom-terminal-panel.commandPrompt'), {cmd: cmd}
 
   delay: (callback, delay=100) ->
-    setTimeout callback, delayconsoleInstancey
+    setTimeout callback, delay
 
   execDelayedCommand: (delay, cmd, args, state) ->
     caller = this
@@ -247,63 +312,74 @@ class CommandOutputView extends View
   getCurrentFileLocation: ()->
     if @getCurrentFilePath() == null
       return null
-    return  @replaceAll(@getCurrentFileName(), "", @getCurrentFilePath())
+    return  @util.replaceAll(@getCurrentFileName(), "", @getCurrentFilePath())
 
   getCurrentFilePath: ()->
     te = atom.workspace.getActiveTextEditor()
     if te?
       if te.getPath()?
         return te.getPath()
-
     return null
-    ###editor = atom.workspace.getActivePaneItem()
-    if editor == null || editor == undefined
-      return null
-    if editor?.buffer == undefined
-      return null
-    file = editor?.buffer.file
-    if file == null || file == undefined
-      return null
-    return file?.path###
+
 
   parseTemplate: (text, vars) ->
+    if not vars?
+      vars = {}
     ret = @parseSpecialStringTemplate text, vars
-    ret = @replaceAll '%(file-original)', @getCurrentFilePath(), ret
-    ret = @replaceAll '%(cwd-original)', @getCwd(), ret
-    ret = @replaceAll '&fs;', '/', ret
-    ret = @replaceAll '&bs;', '\\', ret
+    ret = @util.replaceAll '%(file-original)', @getCurrentFilePath(), ret
+    ret = @util.replaceAll '%(cwd-original)', @getCwd(), ret
+    ret = @util.replaceAll '&fs;', '/', ret
+    ret = @util.replaceAll '&bs;', '\\', ret
     return ret
 
   parseExecToken__: (cmd, args, strArgs) ->
-    cmd = @parseTemplate cmd, {file:@getCurrentFilePath()}
     if strArgs?
-      cmd = @replaceAll "%(*)", strArgs, cmd
-    cmd = @replaceAll "%(*^)", (@replaceAll "%(*^)", "", cmd), cmd
+      cmd = @util.replaceAll "%(*)", strArgs, cmd
+    cmd = @util.replaceAll "%(*^)", (@util.replaceAll "%(*^)", "", cmd), cmd
     if args?
       argsNum = args.length
       for i in [0..argsNum] by 1
         if args[i]?
           v = args[i].replace /\n/ig, ''
-          cmd = @replaceAll "%(#{i})", args[i], cmd
-      for i in [argsNum+1..100] by 1
-        cmd = @replaceAll "%(#{i})", '', cmd
+          cmd = @util.replaceAll "%(#{i})", args[i], cmd
+    cmd = @parseTemplate cmd, {file:@getCurrentFilePath()}
     return cmd
 
+  execStackCounter: 0
+  exec: (cmdStr, ref_args, state, callback) ->
+    if cmdStr.split?
+      cmdStrC = cmdStr.split ';;'
+      if cmdStrC.length > 1
+        cmdStr = cmdStrC
+    @execStackCounter = 0
+    return @exec_ cmdStr, ref_args, state, callback
 
-  exec: (cmdStr, ref_args, state) ->
+  exec_: (cmdStr, ref_args, state, callback) ->
+    if not callback?
+      callback = () -> return null
+    ++@execStackCounter
     if cmdStr instanceof Array
       ret = ''
       for com in cmdStr
         val = @exec com, ref_args, state
         if val?
           ret += val
+      --@execStackCounter
+      if @execStackCounter==0
+        callback()
       if not ret?
         return null
       return ret
     else
+      cmdStr = @util.replaceAll "\\\"", '&hquot;', cmdStr
+      cmdStr = @util.replaceAll "&bs;\"", '&hquot;', cmdStr
+      cmdStr = @util.replaceAll "\\\'", '&lquot;', cmdStr
+      cmdStr = @util.replaceAll "&bs;\'", '&lquot;', cmdStr
+
       ref_args_str = null
       if ref_args?
-        ref_args_str = ref_args.join(' ')
+        if ref_args.join?
+          ref_args_str = ref_args.join(' ')
       cmdStr = @parseExecToken__ cmdStr, ref_args, ref_args_str
 
       args = []
@@ -311,6 +387,8 @@ class CommandOutputView extends View
       cmd.replace /("[^"]*"|'[^']*'|[^\s'"]+)/g, (s) =>
         if s[0] != '"' and s[0] != "'"
           s = s.replace /~/g, @userHome
+        s = @util.replaceAll '&hquot;', '"', s
+        s = @util.replaceAll '&lquot;', '\'', s
         args.push s
       args = @util.dir args, @getCwd()
       cmd = args.shift()
@@ -327,6 +405,9 @@ class CommandOutputView extends View
             ret = command(state, args)
           catch e
             throw new Error "Error at executing terminal command: '#{cmd}' ('#{cmdStr}'): #{e.message}"
+        --@execStackCounter
+        if @execStackCounter==0
+          callback()
         if not ret?
           return null
         return ret
@@ -336,21 +417,24 @@ class CommandOutputView extends View
             command = @getLocalCommand(cmd)
         if command?
           ret = command(state, args)
+          --@execStackCounter
+          if @execStackCounter==0
+            callback()
           if not ret?
             return null
           return ret
         else
+          cmdStr = @util.replaceAll '&hquot;', '"', cmdStr
+          cmd = @util.replaceAll '&hquot;', '"', cmd
+          cmdStr = @util.replaceAll '&lquot;', '\'', cmdStr
+          cmd = @util.replaceAll '&lquot;', '\'', cmd
           @spawn cmdStr, cmd, args
+          --@execStackCounter
+          if @execStackCounter==0
+            callback()
           if not cmd?
             return null
           return null
-
-  compile: () ->
-    @clear()
-    @exec('compile', null, this)
-
-  run: () ->
-    @exec('run', null, this)
 
   isCommandEnabled: (name) ->
     disabledCommands = atom.config.get('atom-terminal-panel.disabledExtendedCommands')
@@ -461,25 +545,7 @@ class CommandOutputView extends View
     commandFinder = new CliCommandFinder cmd
     commandFinderPanel = atom.workspace.addModalPanel(item: commandFinder)
     commandFinder.shown commandFinderPanel, this
-
     return
-
-    ###
-    ret = []
-    for cmd_name, cmd_body of @localCommands
-      ret.push cmd_name
-    for cmd_name, cmd_body of core.getUserCommands()
-      ret.push cmd_name
-    retString = '[\n\t'
-    retSize = ret.length-1
-    for i in [0..retSize] by 1
-      if i != retSize
-        retString += ret[i] + ', '
-      else
-        retString += ret[i]
-    retString += '\n]'
-    return retString
-    ###
 
   commandProgress: (value) ->
     if value < 0
@@ -518,19 +584,25 @@ class CommandOutputView extends View
     if @echoOn
       @message "\n"+@getCommandPrompt(inputCmd)+" "+inputCmd+"\n", false
 
-    ret = @exec inputCmd, null, this
+    ret = @exec inputCmd, null, this, () =>
+      setTimeout () =>
+        @putInputBox()
+      , 0
     if ret?
       @message ret + '\n'
 
     @scrollToBottom()
+
+    # TODO: Should be removed.
     @putInputBox()
     setTimeout () =>
       @putInputBox()
     , 250
+    # TODO: Repair this above, making input box less buggy!
+
     return null
 
   initialize: ->
-
     @userHome = process.env.HOME or process.env.HOMEPATH or process.env.USERPROFILE
     cmd = 'test -e /etc/profile && source /etc/profile;test -e ~/.profile && source ~/.profile; node -pe "JSON.stringify(process.env)"'
     exec cmd, (code, stdout, stderr) ->
@@ -551,6 +623,7 @@ class CommandOutputView extends View
   adjustWindowHeight: ->
     maxHeight = atom.config.get('atom-terminal-panel.WindowHeight')
     @cliOutput.css("max-height", "#{maxHeight}px")
+    $('.terminal-input').css("max-height", "#{maxHeight}px")
 
   showCmd: ->
     @focusInputBox()
@@ -747,7 +820,11 @@ class CommandOutputView extends View
     caller = this
 
     if atom.config.get 'atom-terminal-panel.enableConsoleInteractiveHints'
-      $('.cli-tooltip[data-toggle="tooltip"]').tooltip()
+      $('.cli-tooltip[data-toggle="tooltip"]').each(() ->
+          title = $(this).attr('title')
+          if $(this).setTooltip?
+            $(this).setTooltip title
+      )
 
     if atom.config.get 'atom-terminal-panel.enableConsoleInteractiveLinks'
       @find('.console-link').each (
@@ -846,14 +923,14 @@ class CommandOutputView extends View
     str = filename
     name_tokens = filename
     filename = filename.replace /:[0-9]+:[0-9]/ig, ''
-    name_tokens = @replaceAll filename, '', name_tokens
+    name_tokens = @util.replaceAll filename, '', name_tokens
     name_tokens = name_tokens.split ':'
     fileline = name_tokens[0]
     filecolumn = name_tokens[1]
 
-    filename = @replaceAll '/', '\\', filename
-    filename = @replaceAll parent, '', filename
-    filename = @replaceAll (@replaceAll '/', '\\', parent), '', filename
+    filename = @util.replaceAll '/', '\\', filename
+    filename = @util.replaceAll parent, '', filename
+    filename = @util.replaceAll (@util.replaceAll '/', '\\', parent), '', filename
 
     if filename[0] == '\\' or filename[0] == '/'
       filename = filename.substring(1)
@@ -892,7 +969,7 @@ class CommandOutputView extends View
         # TODO check extension
         matcher = /(.:)((.*)\\)*((.*\.)*)/ig
         extension = filepath.replace matcher, ""
-        classes.push @replaceAll(' ', '', extension)
+        classes.push @util.replaceAll(' ', '', extension)
         classes.push 'icon-file-text'
         target_type = 'file'
       if stat.isDirectory()
@@ -915,7 +992,7 @@ class CommandOutputView extends View
       classes.push 'status-ignored'
       target_type = 'ignored'
 
-    href = 'file:///' + @replaceAll('\\', '/', filepath)
+    href = 'file:///' + @util.replaceAll('\\', '/', filepath)
 
     classes.push 'cli-tooltip'
 
@@ -925,8 +1002,8 @@ class CommandOutputView extends View
     if filecolumn?
       exattrs.push 'data-column="'+filecolumn+'"'
 
-    filepath_tooltip = @replaceAll '\\', '/', filepath
-    filepath = @replaceAll '\\', '/', filepath
+    filepath_tooltip = @util.replaceAll '\\', '/', filepath
+    filepath = @util.replaceAll '\\', '/', filepath
     ["<font class=\"file-extension\"><#{wrapper_class} #{exattrs.join ' '} tooltip=\"\" data-targetname=\"#{filename}\" data-targettype=\"#{target_type}\" data-target=\"#{filepath}\" class=\"#{classes.join ' '}\" data-toggle=\"tooltip\" data-placement=\"top\" title=\"#{filepath_tooltip}\" >#{filename}</#{wrapper_class}></font>", stat, filename]
 
   getGitStatusName: (path, gitRoot, repo) ->
@@ -939,24 +1016,12 @@ class CommandOutputView extends View
     if repo.isPathIgnore path
       return 'ignored'
 
-  escapeRegExp: (string) ->
-    if string == null
-      return null
-    return string.replace(/([.*+?^=!:${}()|\[\]\/\\])/g, "\\$1");
-
-  replaceAll: (find, replace, str) ->
-    if not str?
-      return null
-    if not replace?
-      return str
-    return str.replace(new RegExp(@escapeRegExp(find), 'g'), replace);
-
   preserveOriginalPaths: (text) ->
-    text = @replaceAll @getCurrentFilePath(), '%(file-original)', text
-    text = @replaceAll @getCwd(), '%(cwd-original)', text
-    text = @replaceAll @getCwd(), '%(cwd-original)', text
-    text = @replaceAll '/', '&fs;', text
-    text = @replaceAll '\\', '&bs;', text
+    text = @util.replaceAll @getCurrentFilePath(), '%(file-original)', text
+    text = @util.replaceAll @getCwd(), '%(cwd-original)', text
+    text = @util.replaceAll @getCwd(), '%(cwd-original)', text
+    text = @util.replaceAll '/', '&fs;', text
+    text = @util.replaceAll '\\', '&bs;', text
     return text
 
   parseMessage: (message, matchSpec=true, parseCustomRules=true) ->
@@ -993,30 +1058,30 @@ class CommandOutputView extends View
           if atom.config.get('atom-terminal-panel.textReplacementFileAdress') != ''
             #regex = /(([A-Za-z]:)(\\|\/))?([A-Za-z$\*\-+&#@!_\.]+(\\|\/))([A-Za-z $\*\-+&#@!_\.]+(\\|\/))*[A-Za-z\-_$\*\+&\^@#\. ]+\.[A-Za-z\-_$\*\+]*/ig
             cwdN = @getCwd()
-            cwdE = @replaceAll '/', '\\', @getCwd()
-            regexString ='(' + (@escapeRegExp cwdN) + '|' + (@escapeRegExp cwdE) + ')\\\\([^\\s:#$%^&!:]| )+\\.?([^\\s:#$@%&\\*\\^!0-9:\\.+\\-,\\\\\\/\"]| )*'
+            cwdE = @util.replaceAll '/', '\\', @getCwd()
+            regexString ='(' + (@util.escapeRegExp cwdN) + '|' + (@util.escapeRegExp cwdE) + ')\\\\([^\\s:#$%^&!:]| )+\\.?([^\\s:#$@%&\\*\\^!0-9:\\.+\\-,\\\\\\/\"]| )*'
             regex = new RegExp(regexString, 'ig')
             message = message.replace regex, (match, text, urlId) =>
               return @parseSpecialStringTemplate atom.config.get('atom-terminal-panel.textReplacementFileAdress'), {file:match}
       if atom.config.get('atom-terminal-panel.textReplacementCurrentFile')?
         if atom.config.get('atom-terminal-panel.textReplacementCurrentFile') != ''
           path = @getCurrentFilePath()
-          regex = new RegExp @escapeRegExp(path), 'g'
+          regex = new RegExp @util.escapeRegExp(path), 'g'
           message = message.replace regex, (match, text, urlId) =>
             return @parseSpecialStringTemplate atom.config.get('atom-terminal-panel.textReplacementCurrentFile'), {file:match}
       message = @preserveOriginalPaths message
       if atom.config.get('atom-terminal-panel.textReplacementCurrentPath')?
         if atom.config.get('atom-terminal-panel.textReplacementCurrentPath') != ''
           path = @getCwd()
-          regex = new RegExp @escapeRegExp(path), 'g'
+          regex = new RegExp @util.escapeRegExp(path), 'g'
           message = message.replace regex, (match, text, urlId) =>
             return @parseSpecialStringTemplate atom.config.get('atom-terminal-panel.textReplacementCurrentPath'), {file:match}
 
 
-    message = @replaceAll '%(file-original)', @getCurrentFilePath(), message
-    message = @replaceAll '%(cwd-original)', @getCwd(), message
-    message = @replaceAll '&fs;', '/', message
-    message = @replaceAll '&bs;', '\\', message
+    message = @util.replaceAll '%(file-original)', @getCurrentFilePath(), message
+    message = @util.replaceAll '%(cwd-original)', @getCwd(), message
+    message = @util.replaceAll '&fs;', '/', message
+    message = @util.replaceAll '&bs;', '\\', message
 
     rules = core.getConfig().rules
     for key, value of rules
@@ -1061,19 +1126,17 @@ class CommandOutputView extends View
 
           groupsNumber = groups.length-1
           for i in [0..groupsNumber] by 1
-            vars[i+1] = groups[i]
-          for i in [0..50] by 1
-            if not vars[i+1]?
-              vars[i+1] = ""
+            if groups[i]?
+              vars[i+1] = groups[i]
 
           console.log 'Active rule => '+matchExp
           repl = @parseSpecialStringTemplate replExp, vars
           return "<font style=\"#{style}\">#{repl}</font>"
 
-    message = @replaceAll '%(file-original)', @getCurrentFilePath(), message
-    message = @replaceAll '%(cwd-original)', @getCwd(), message
-    message = @replaceAll '&fs;', '/', message
-    message = @replaceAll '&bs;', '\\', message
+    message = @util.replaceAll '%(file-original)', @getCurrentFilePath(), message
+    message = @util.replaceAll '%(cwd-original)', @getCwd(), message
+    message = @util.replaceAll '&fs;', '/', message
+    message = @util.replaceAll '&bs;', '\\', message
 
     return message
 
@@ -1096,15 +1159,15 @@ class CommandOutputView extends View
       mes = mes[0]
 
     mes = @parseMessage message, matchSpec, matchSpec
-    # mes = @replaceAll '<', '&lt;', mes
-    # mes = @replaceAll '>', '&gt;', mes
+    # mes = @util.replaceAll '<', '&lt;', mes
+    # mes = @util.replaceAll '>', '&gt;', mes
     @cliOutput.append mes
     @showCmd()
     removeClass @statusIcon, 'status-error'
     addClass @statusIcon, 'status-success'
     @parseSpecialNodes()
     @scrollToBottom()
-    @putInputBox()
+    # @putInputBox()
 
   errorMessage: (message) ->
     @cliOutput.append @parseMessage(message)
@@ -1114,7 +1177,7 @@ class CommandOutputView extends View
     @parseSpecialNodes()
 
   correctFilePath: (path) ->
-    return @replaceAll '\\', '/', path
+    return @util.replaceAll '\\', '/', path
 
   getCwd: ->
     extFile = extname atom.project.path
@@ -1135,7 +1198,7 @@ class CommandOutputView extends View
     cwd = @cwd or projectDir or @userHome
     return @correctFilePath cwd
 
-  spawn: (inputCmd, cmd, args) ->
+  spawn: (inputCmd, cmd, args) =>
     ## @cmdEditor.hide()
     ## htmlStream = ansihtml()
     # htmlStream = iconv.decodeStream @streamsEncoding
@@ -1150,6 +1213,7 @@ class CommandOutputView extends View
     # @program.stdout.pipe htmlStream
     # @program.stderr.pipe htmlStream
     ## @program.stdout.setEncoding @streamsEncoding
+    @spawnProcessActive = true
 
     instance = this
     dataCallback = (data) ->
@@ -1178,6 +1242,7 @@ class CommandOutputView extends View
         @program = null
         addClass @statusIcon, code == 0 and 'status-success' or 'status-error'
         @showCmd()
+        @spawnProcessActive = false
       @program.on 'error', (err) =>
         console.log 'error' if atom.config.get('atom-terminal-panel.logConsole')
         @message(err.message)

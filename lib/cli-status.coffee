@@ -1,3 +1,11 @@
+###
+  Atom-terminal-panel
+  Copyright by isis97
+  MIT licensed
+
+  The main plugin class.
+###
+
 require './cli-utils'
 
 CliStatusView = include './cli-status-view'
