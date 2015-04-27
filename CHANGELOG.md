@@ -1,4 +1,6 @@
 ## Changelog
+* v4.4.2
+  * Added missing dependencies.
 * v4.4.1
   * Added ability to bind the keys to the commands! :D
   * Made the terminal resizeable!

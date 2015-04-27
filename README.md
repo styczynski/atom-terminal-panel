@@ -156,7 +156,7 @@ And now creating custom actions:
   ]
 ]
 ```
-Actions alows you to run your commands as atom commands or bind them to the specified keys.
+Actions allows you to run your commands as atom commands or bind them to the specified keys.
 From the moment of the terminal initialization a new atom command is created - `atom-terminal-panel:test`,
 which will execute the `hello_world` command in the terminal.
 
@@ -286,9 +286,9 @@ You can use the following properties in regex matches:
 
 You can use special annotation (on commands/rules definitions or in settings - command prompt message/current file path replacement) which is really powerful:
 
-(R - can be used in the rules user definitions)
-(T - can be directly typed to the terminal)
-(A - can be used from the terminal API)
+* (R - can be used in the rules user definitions)
+* (T - can be directly typed to the terminal)
+* (A - can be used from the terminal API)
 
 | Property name | Usage context | Description |
 |----------------------------------------------------------------------------------------------------|---------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|

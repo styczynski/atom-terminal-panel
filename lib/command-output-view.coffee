@@ -49,7 +49,7 @@ class CommandOutputView extends View
   }
   @content: ->
     @div tabIndex: -1, class: 'panel cli-status panel-bottom', =>
-      @div class: 'terminal panel-divider', style: 'cursor:n-resize;width:100%;height:8px;box-shadow: 0 2px 3px 0px #39CCCC;', outlet: 'panelDivider'
+      @div class: 'terminal panel-divider', style: 'cursor:n-resize;width:100%;height:8px;', outlet: 'panelDivider'
       @div class: 'panel-heading btn-toolbar', outlet:'consoleToolbarHeading', =>
         @div class: 'btn-group', outlet:'consoleToolbar', =>
           @button outlet: 'killBtn', click: 'kill', class: 'btn hide', =>
