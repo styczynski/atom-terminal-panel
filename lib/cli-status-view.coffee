@@ -33,6 +33,14 @@ class CliStatusView extends View
     @createCommandView()
     @attach()
 
+  @createSpecsCommandView = () ->
+    termStatus = domify '<span class="cli-status icon icon-terminal"></span>'
+    commandOutputView = new CommandOutputView
+    commandOutputView.statusIcon = termStatus
+    commandOutputView.statusView = this
+    commandOutputView.init()
+    return commandOutputView
+
   createCommandView: ->
     termStatus = domify '<span class="cli-status icon icon-terminal"></span>'
     commandOutputView = new CommandOutputView

@@ -1,4 +1,9 @@
 ## Changelog
+* v4.4.3
+  * Repaired deprecated calls.
+  * Rewritten some part of the code.
+  * Removed some serious bugs.
+  * Started to make working `specs`.
 * v4.4.2
   * Added missing dependencies.
 * v4.4.1

@@ -30,6 +30,13 @@ class CliCore
         ]
       }
 
+  createSpecsTerminal: () ->
+    t = (require './cli-status-view').createSpecsCommandView()
+    t.turnSpecsMode true
+    t.redirect 'console'
+    return t
+
+
   createDefaultCommandsFile: () ->
     if atom.config.get('atom-terminal-panel.enableUserCommands')
       try

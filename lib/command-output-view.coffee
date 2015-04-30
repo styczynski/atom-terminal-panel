@@ -33,6 +33,8 @@ class CommandOutputView extends View
   streamsEncoding: 'iso-8859-3'
   _cmdintdel: 50
   echoOn: true
+  redirectOutput: ''
+  specsMode: false
   inputLine: 0
   helloMessageShown: false
   minHeight: 250
@@ -68,6 +70,9 @@ class CommandOutputView extends View
 
   localCommandAtomBindings: []
   localCommands: commandsBuiltins
+
+  turnSpecsMode: (state) ->
+    @specsMode = state
 
   os: () ->
     isWindows = false
@@ -179,7 +184,7 @@ class CommandOutputView extends View
     if not location?
       return
     location = resolve location
-    console.log ("Require atom-terminal-panel plugin CSS file: "+location+"\n") if atom.config.get('atom-terminal-panel.logConsole')
+    console.log ("Require atom-terminal-panel plugin CSS file: "+location+"\n") if atom.config.get('atom-terminal-panel.logConsole') or @specsMode
     $('head').append "<link rel='stylesheet' type='text/css' href='#{location}'/>"
 
   resolvePluginDependencies: (path, plugin) ->
@@ -217,10 +222,10 @@ class CommandOutputView extends View
         lastY = -1
 
     normalizedPath = require("path").join(__dirname, "../commands")
-    console.log ("Loading atom-terminal-panel plugins from the directory: "+normalizedPath+"\n") if atom.config.get('atom-terminal-panel.logConsole')
+    console.log ("Loading atom-terminal-panel plugins from the directory: "+normalizedPath+"\n") if atom.config.get('atom-terminal-panel.logConsole') or @specsMode
     fs.readdirSync(normalizedPath).forEach( (folder) =>
       fullpath = resolve "../commands/" +folder
-      console.log ("Require atom-terminal-panel plugin: "+folder+"\n") if atom.config.get('atom-terminal-panel.logConsole')
+      console.log ("Require atom-terminal-panel plugin: "+folder+"\n") if atom.config.get('atom-terminal-panel.logConsole') or @specsMode
       obj = require ("../commands/" +folder+"/index.coffee")
       console.log "Plugin loaded."
       @resolvePluginDependencies fullpath, obj
@@ -233,7 +238,7 @@ class CommandOutputView extends View
           value.name = key
           variablesBuiltins.putVariable value
     )
-    console.log ("All plugins were loaded.") if atom.config.get('atom-terminal-panel.logConsole')
+    console.log ("All plugins were loaded.") if atom.config.get('atom-terminal-panel.logConsole') or @specsMode
 
     if core.getConfig()?
       actions = core.getConfig().actions
@@ -246,23 +251,24 @@ class CommandOutputView extends View
               @onCommand action[1]
             atom.commands.add 'atom-workspace', obj
 
-    eleqr = atom.workspace.getActivePaneItem() ? atom.workspace
-    eleqr = atom.views.getView(eleqr)
-    atomCommands = atom.commands.findCommands({target: eleqr})
-    for command in atomCommands
-      comName = command.name
-      com = {}
-      com.description = command.displayName
-      com.command =
-        ((comNameP) ->
-          return (state, args) ->
-            ele = atom.workspace.getActivePaneItem() ? atom.workspace
-            ele = atom.views.getView(ele)
-            atom.commands.dispatch ele, comNameP
-            return (state.consoleLabel 'info', "info") + (state.consoleText 'info', 'Atom command executed: '+comNameP)
-        )(comName)
-      com.source = "internal-atom"
-      @localCommands[comName] = com
+    if atom.workspace?
+      eleqr = atom.workspace.getActivePaneItem() ? atom.workspace
+      eleqr = atom.views.getView(eleqr)
+      atomCommands = atom.commands.findCommands({target: eleqr})
+      for command in atomCommands
+        comName = command.name
+        com = {}
+        com.description = command.displayName
+        com.command =
+          ((comNameP) ->
+            return (state, args) ->
+              ele = atom.workspace.getActivePaneItem() ? atom.workspace
+              ele = atom.views.getView(ele)
+              atom.commands.dispatch ele, comNameP
+              return (state.consoleLabel 'info', "info") + (state.consoleText 'info', 'Atom command executed: '+comNameP)
+          )(comName)
+        com.source = "internal-atom"
+        @localCommands[comName] = com
 
     toolbar = core.getConfig().toolbar
     if toolbar?
@@ -315,6 +321,8 @@ class CommandOutputView extends View
     return  @util.replaceAll(@getCurrentFileName(), "", @getCurrentFilePath())
 
   getCurrentFilePath: ()->
+    if not atom.workspace?
+      return null
     te = atom.workspace.getActiveTextEditor()
     if te?
       if te.getPath()?
@@ -347,6 +355,10 @@ class CommandOutputView extends View
 
   execStackCounter: 0
   exec: (cmdStr, ref_args, state, callback) ->
+    if not state?
+      state = this
+    if not ref_args?
+      ref_args = {}
     if cmdStr.split?
       cmdStrC = cmdStr.split ';;'
       if cmdStrC.length > 1
@@ -412,7 +424,7 @@ class CommandOutputView extends View
           return null
         return ret
       else
-        if atom.config.get('atom-terminal-panel.enableExtendedCommands')
+        if atom.config.get('atom-terminal-panel.enableExtendedCommands') or @specsMode
           if @isCommandEnabled(cmd)
             command = @getLocalCommand(cmd)
         if command?
@@ -437,7 +449,9 @@ class CommandOutputView extends View
           return null
 
   isCommandEnabled: (name) ->
-    disabledCommands = atom.config.get('atom-terminal-panel.disabledExtendedCommands')
+    disabledCommands = atom.config.get('atom-terminal-panel.disabledExtendedCommands') or @specsMode
+    if not disabledCommands?
+      return true
     if name in disabledCommands
       return false
     return true
@@ -487,7 +501,7 @@ class CommandOutputView extends View
 
     cmd_ = []
     cmd_len = cmd.length
-    cmd_forbd = atom.config.get 'atom-terminal-panel.disabledExtendedCommands'
+    cmd_forbd = (atom.config.get 'atom-terminal-panel.disabledExtendedCommands') or []
     for cmd_item in cmd
       if cmd_item.name in cmd_forbd
       else
@@ -559,7 +573,7 @@ class CommandOutputView extends View
     if not forceShow
       if @helloMessageShown
         return
-    if atom.config.get 'atom-terminal-panel.enableConsoleStartupInfo' or forceShow
+    if atom.config.get 'atom-terminal-panel.enableConsoleStartupInfo' or forceShow or (not @specsMode)
       changelog_path = require("path").join(__dirname, "../CHANGELOG.md");
       readme_path = require("path").join(__dirname, "../README.md");
       hello_message = @consolePanel 'ATOM Terminal', 'Please enter new commands to the box below.<br>The console supports special anotattion like: %(path), %(file), %(link)file.something%(endlink).<br>It also supports special HTML elements like: %(tooltip:A:content:B) and so on.<br>Hope you\'ll enjoy the terminal.'+
@@ -822,8 +836,7 @@ class CommandOutputView extends View
     if atom.config.get 'atom-terminal-panel.enableConsoleInteractiveHints'
       $('.cli-tooltip[data-toggle="tooltip"]').each(() ->
           title = $(this).attr('title')
-          if $(this).setTooltip?
-            $(this).setTooltip title
+          atom.tooltips.add $(this), {}
       )
 
     if atom.config.get 'atom-terminal-panel.enableConsoleInteractiveLinks'
@@ -889,7 +902,7 @@ class CommandOutputView extends View
     return text
 
   consoleLabel: (type, text) ->
-    if not atom.config.get 'atom-terminal-panel.enableConsoleLabels'
+    if (not atom.config.get 'atom-terminal-panel.enableConsoleLabels') and (not @specsMode)
       return text
 
     if not text?
@@ -900,7 +913,7 @@ class CommandOutputView extends View
     if type == 'default'
       return '<span class="inline-block highlight">'+text+'</span>'
     if type == 'primary'
-      return '<span class="label label-primar">'+text+'</span>'
+      return '<span class="label label-primary">'+text+'</span>'
     if type == 'success'
       return '<span class="inline-block highlight-success">'+text+'</span>'
     if type == 'info'
@@ -957,7 +970,7 @@ class CommandOutputView extends View
         file_exists = false
 
     if file_exists
-      if atom.config.get('atom-terminal-panel.enableConsoleInteractiveLinks')
+      if atom.config.get('atom-terminal-panel.enableConsoleInteractiveLinks') or @specsMode
         classes.push 'console-link'
       if stat.isSymbolicLink()
         classes.push 'stat-link'
@@ -1140,7 +1153,14 @@ class CommandOutputView extends View
 
     return message
 
+  redirect: (streamName) ->
+    @redirectOutput = streamName
+
   rawMessage: (message) ->
+    if @redirectOutput == 'console'
+      console.log message
+      return
+
     @cliOutput.append message
     @showCmd()
     removeClass @statusIcon, 'status-error'
@@ -1148,6 +1168,10 @@ class CommandOutputView extends View
     # @parseSpecialNodes()
 
   message: (message, matchSpec=true) ->
+    if @redirectOutput == 'console'
+      console.log message
+      return
+
     if not message?
       return
     mes = message.split '%(break)'
@@ -1180,6 +1204,8 @@ class CommandOutputView extends View
     return @util.replaceAll '\\', '/', path
 
   getCwd: ->
+    if not atom.project?
+      return null
     extFile = extname atom.project.path
 
     if extFile == ""
@@ -1235,7 +1261,7 @@ class CommandOutputView extends View
       addClass @statusIcon, 'status-running'
       @killBtn.removeClass 'hide'
       @program.once 'exit', (code) =>
-        console.log 'exit', code if atom.config.get('atom-terminal-panel.logConsole')
+        console.log 'exit', code if atom.config.get('atom-terminal-panel.logConsole') or @specsMode
         @killBtn.addClass 'hide'
         removeClass @statusIcon, 'status-running'
         # removeClass @statusIcon, 'status-error'
@@ -1244,7 +1270,7 @@ class CommandOutputView extends View
         @showCmd()
         @spawnProcessActive = false
       @program.on 'error', (err) =>
-        console.log 'error' if atom.config.get('atom-terminal-panel.logConsole')
+        console.log 'error' if atom.config.get('atom-terminal-panel.logConsole') or @specsMode
         @message(err.message)
         @showCmd()
         addClass @statusIcon, 'status-error'
@@ -1252,7 +1278,7 @@ class CommandOutputView extends View
         @flashIconClass 'status-info'
         removeClass @statusIcon, 'status-error'
       @program.stderr.on 'data', =>
-        console.log 'stderr' if atom.config.get('atom-terminal-panel.logConsole')
+        console.log 'stderr' if atom.config.get('atom-terminal-panel.logConsole') or @specsMode
         @flashIconClass 'status-error', 300
 
     catch err

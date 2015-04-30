@@ -103,7 +103,7 @@ class Util
         for source in sources
           isDir = false
           try
-            stat = fs.statSync(targets)
+            stat = fs.statSync targets, (e) -> return
             isDir = stat.isDirectory()
           catch e
             isDir = false
@@ -120,7 +120,7 @@ class Util
     if paths instanceof Array
       ret = ''
       for path in paths
-        fs.mkdirSync path
+        fs.mkdirSync path, (e) -> return
         ret += 'Directory created \"'+path+'\"\n'
       return ret
     else
@@ -131,7 +131,7 @@ class Util
     if paths instanceof Array
       ret = ''
       for path in paths
-        fs.rmdirSync path
+        fs.rmdirSync path, (e) -> return
         ret += 'Directory removed \"'+path+'\"\n'
       return ret
     else
@@ -139,7 +139,7 @@ class Util
 
   # Removes the given directory/-ies.
   rename: (oldpath, newpath) ->
-    fs.renameSync oldpath, newpath
+    fs.renameSync oldpath, newpath, (e) -> return
     return 'File/directory renamed: '+oldpath+'\n'
 
 module.exports =

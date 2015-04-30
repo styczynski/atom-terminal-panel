@@ -56,7 +56,7 @@ module.exports =
       if args == null || args == undefined
         atom.workspaceView.trigger 'application:new-file'
         return null
-      file_name = state.replaceAll '\"', '', args[0]
+      file_name = state.util.replaceAll '\"', '', args[0]
       if file_name == null || file_name == undefined
         atom.workspaceView.trigger 'application:new-file'
         return null
@@ -71,7 +71,7 @@ module.exports =
     "description": "Removes the given file."
     "command": (state, args)->
       filepath = state.resolvePath args[0]
-      fs.unlinkSync(filepath)
+      fs.unlink filepath, (e) -> return
       return state.consoleLink filepath
   "memdump":
     "description": "Displays a list of all available internally stored commands."

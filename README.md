@@ -324,7 +324,7 @@ You can use special annotation (on commands/rules definitions or in settings - c
 | `%(disc)` | R/T/A | Refers to the current working directory (disc name) |
 | `%(path:[index])` | R/T/A | Refers to the current working directory (access path breadcrumbs) |
 | `%(tooltip:[displayed text]:content:[tooltip content])` | R/T/A | Creates interactive tooltip (displayed text and tooltip content cannot contain any special characters) |
-| `%(label:[type]:[text])` | R/T/A | Creates interactive label (the text cannot caontain any spacial character) - the label types are: error, danger, warning, info, default, badge) |
+| `%(label:[type]:text:[text])` | R/T/A | Creates interactive label (the text cannot caontain any spacial character) - the label types are: error, danger, warning, info, default, badge) |
 | `%([index])` | A | Refers to the parameters passed to the invoked command. |
 | `%([index])` | R | Refers to the regular expression catching group (group 0 is entire match) |
 | `%(content)` | R | Refers to the entire match found by the regular expression. |

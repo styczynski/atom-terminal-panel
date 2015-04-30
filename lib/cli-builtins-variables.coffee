@@ -86,7 +86,7 @@ class BuiltinVariables
       if values.file?
         file = values.file
 
-    if not atom.config.get('atom-terminal-panel.parseSpecialTemplateTokens')
+    if (not atom.config.get('atom-terminal-panel.parseSpecialTemplateTokens')) and (not consoleInstance.specsMode)
       return  consoleInstance.preserveOriginalPaths (prompt.replace /%\([^ ]*\)/ig, '')
 
     if prompt.indexOf('%') == -1
@@ -255,7 +255,7 @@ class BuiltinVariables
         return "<font style=\"text-decoration:line-through;\">"
       return ''
 
-    if atom.config.get 'atom-terminal-panel.enableConsoleLabels'
+    if (atom.config.get 'atom-terminal-panel.enableConsoleLabels') or consoleInstance.specsMode
       prompt = prompt.replace /%\(label:[^\n\t\[\]{}%\)\(]*\)/ig, (match, text, urlId) =>
         target = consoleInstance.util.replaceAll '%(label:', '', match
         target = target.substring 0, target.length-1
