@@ -6,12 +6,10 @@
   'Command finder' view, which lists all available commands and variables.
 ###
 
-require './cli-utils'
-
 {SelectListView, $$} = include 'atom-space-pen-views'
 
 module.exports =
-class ExampleSelectListView extends SelectListView
+class ATPCommandFinderView extends SelectListView
   @thisPanel: null
   @thisCaller: null
 

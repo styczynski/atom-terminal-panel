@@ -49,7 +49,7 @@ module.exports =
   "terminal":
     "description" : "Shows the native terminal in the current location."
     "command": (state, args)->
-      o = state.os()
+      o = state.util.os()
       if o.windows
         state.exec 'start cmd.exe', args, state
       else

@@ -50,9 +50,28 @@ module.exports =
         points.push([i, vm.runInContext(args[2], math_parser_sandbox)])
       math_parser_sandbox.x = undefined
       id = generateRandomID()
-      state.message '<div><div id="chart-'+id+'" style="height:300px; width:500px;"></div></div>'
+      state.message '<div style="height:300px; width:500px;padding-left:25px;" ><div id="chart-'+id+'"></div></div>'
       $.jqplot('chart-'+id, [points], {
         series:[{showMarker:false}]
+        title:'Plotting f(x):='+args[2]
+        axes:{
+          xaxis:{
+            label:'Angle (radians)'
+            labelRenderer: $.jqplot.CanvasAxisLabelRenderer
+            labelOptions: {
+              fontFamily: 'Georgia, Serif'
+              fontSize: '0pt'
+            }
+          }
+          yaxis:{
+            label:''
+            labelRenderer: $.jqplot.CanvasAxisLabelRenderer
+            labelOptions: {
+              fontFamily: 'Georgia, Serif'
+              fontSize: '0pt'
+            }
+          }
+        }
       })
       return null
   "parse":

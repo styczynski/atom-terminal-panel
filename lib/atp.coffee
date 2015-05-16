@@ -6,32 +6,29 @@
   The main plugin class.
 ###
 
-require './cli-utils'
+require './atp-utils'
 
-CliStatusView = include './cli-status-view'
-core = include './cli-core'
+path = include 'path'
+ATPPanel = include 'atp-panel'
+ATPOutputView = include 'atp-view'
+core = include 'atp-core'
 module.exports =
   cliStatusView: null
+  callbacks:
+    onDidActivateInitialPackages: []
+
+  getPanel: ->
+    return @cliStatusView
 
   activate: (state) ->
-    # core.init()
-    createStatusEntry = =>
-      @cliStatusView = new CliStatusView(state.cliStatusViewState)
-
-    if atom.views.getView(atom.workspace).statusBar
-      createStatusEntry()
-    else
-      atom.packages.once 'activated', ->
-        createStatusEntry()
-    setTimeout ()->
+    @cliStatusView = new ATPPanel(state.cliStatusViewState)
+    setTimeout () ->
       core.init()
-    , 250
+    ,0
 
   deactivate: ->
-    @cliStatusView.destroy()
-
-  # serialize: ->
-  #   cliStatusViewState: @cliStatusView.serialize()
+    if @cliStatusView?
+      @cliStatusView.destroy()
 
   config:
     'WindowHeight':
@@ -41,6 +38,11 @@ module.exports =
     'enableWindowAnimations':
       title: 'Enable window animations'
       description: 'Enable window animations.'
+      type: 'boolean'
+      default: true
+    'useAtomIcons':
+      title: 'Use Atom icons'
+      description: 'Uses only the icons used by the Atom. Otherwise the default terminal icons will be used.'
       type: 'boolean'
       default: true
     'clearCommandInput':
@@ -119,7 +121,7 @@ module.exports =
       title: 'The command prompt message.'
       description: 'Set the command prompt message.'
       type: 'string'
-      default: '%(label:badge:text:%(line)) %(^#FF851B)%(hours):%(minutes)%(^) %(^#01FF70)%(hostname)%(^):%(^#DDDDDD)%(^#39CCCC)../%(path:-2)/%(path:-1)%(^)>%(^)'
+      default: '%(dynamic) %(label:badge:text:%(line)) %(^#FF851B)%(hours):%(minutes):%(seconds)%(^) %(^#01FF70)%(hostname)%(^):%(^#DDDDDD)%(^#39CCCC)../%(path:-2)/%(path:-1)%(^)>%(^)'
     'textReplacementCurrentPath':
       title: 'Current working directory replacement'
       description: 'Replacement for the current working directory path at the console output.'
@@ -135,6 +137,11 @@ module.exports =
       description: 'Replacement for any file adress at the console output.'
       type: 'string'
       default: '%(link)%(file)%(endlink)'
+    'statusBarText':
+      title: 'Status bar text'
+      description: 'Text displayed on the terminal status bar.'
+      type: 'string'
+      default: '%(dynamic) %(hostname) %(username) %(hours):%(minutes):%(seconds) %(ampm)'
     'XExperimentEnableForceLinking':
       title: 'EXPERIMENTAL: Enable auto links'
       description: 'Warning: This function is experimental, so it can be broken.'

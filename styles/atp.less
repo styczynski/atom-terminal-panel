@@ -11,7 +11,7 @@
 @import "ui-variables";
 
 
-.autocomplete-input {
+.autocomplete-text {
   background-color: transparent;
   border: none;
   color: white;
@@ -25,6 +25,7 @@
   font-family: "Lucida Console";
   background-color: black;
   font-weight: normal;
+  border-radius: 5px;
 }
 
 .autocomplete-hover-item {
@@ -38,7 +39,36 @@
 }
 
 
-.cli-status {
+.atp-panel {
+
+
+  .atp-terminal-action-button(@content:'', @location:40px) {
+    position: absolute;
+    right: @location;
+    background-color: transparent;
+    cursor: pointer;
+    border-style:none;
+    color: gray;
+    font-size: 150%;
+    &:hover::before {
+      color: black;
+    }
+    &:before {
+      content: @content;
+    }
+  }
+
+  .atp-close-btn {
+    .atp-terminal-action-button('\25BC', 40px);
+  }
+
+  .atp-destroy-btn {
+    .atp-terminal-action-button('✖', 10px);
+  }
+
+  .atp-maximize-btn {
+    .atp-terminal-action-button('\25B2', 70px);
+  }
 
   &.panel {
     margin-bottom: 0px;

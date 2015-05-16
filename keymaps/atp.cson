@@ -14,6 +14,7 @@
   'cmd-shift-k': 'atom-terminal-panel:prev'
   'cmd-shift-x': 'atom-terminal-panel:destroy'
   'ctrl-`': 'atom-terminal-panel:toggle'
+  'ctrl': 'atom-terminal-panel:toggle-autocompletion'
 
 '.platform-linux atom-workspace, .platform-win32 atom-workspace':
   'shift-enter': 'atom-terminal-panel:toggle'
@@ -22,10 +23,11 @@
   'alt-shift-k': 'atom-terminal-panel:prev'
   'alt-shift-x': 'atom-terminal-panel:destroy'
   'ctrl-`': 'atom-terminal-panel:toggle'
+  'ctrl': 'atom-terminal-panel:toggle-autocompletion'
 
-'.cli-status':
+'.atp-panel':
   'cmd-c': 'native!'
   'ctrl-c': 'native!'
 
-'.cli-panel-body':
+'.atp-panel-body':
   'escape': 'atom-terminal-panel:toggle'

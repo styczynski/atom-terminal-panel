@@ -11,12 +11,34 @@
 
 ###
 
-require './cli-utils'
-
 fs = include 'fs'
-{resolve, dirname, extname} = include 'path'
+{resolve, dirname, extname, sep} = include 'path'
 
 class Util
+
+  #
+  # Detects the operating system platform
+  # Do os = os()
+  # if(os.windows) { /*...*/ }
+  # if(os.linux)   { /*...*/ }
+  # if(os.mac)     { /*...*/ }
+  #
+  os: () ->
+    isWindows = false
+    isMac = false
+    isLinux = false
+    osname = process.platform or process.env.OS
+    if /^win/igm.test osname
+      isWindows = true
+    else if /^darwin/igm.test osname
+      isMac = true
+    else if /^linux/igm.test osname
+      isLinux = true
+    return {
+      windows: isWindows
+      mac: isMac
+      linux: isLinux
+    }
 
   #
   # Escapes the given regular expression string.
@@ -37,7 +59,13 @@ class Util
       return str
     return str.replace(new RegExp(@escapeRegExp(find), 'g'), replace)
 
-  # If the file begins with ./ it will be redirected to the given cwd directory.
+  #
+  # Resolves the given path/s.
+  #
+  # If the file begins with ./ or ../ it will be redirected to the given cwd directory.
+  # If the file starts with / it will be redirected to the cwd disc.
+  # If the file does not start with ./ nor ../ and / it will be NOT redirected.
+  #
   # This method accepts also path arrays.
   # e.g.
   #
@@ -52,12 +80,21 @@ class Util
         ret.push @dir path, cwd
       return ret
     else
+
+      ###
       if (paths.indexOf('./') == 0) or (paths.indexOf('.\\') == 0)
-        return @replaceAll '\\', '/', resolve(cwd + '/' + paths)
+        return @replaceAll '\\', '/', (cwd + '/' + paths)
       else if (paths.indexOf('../') == 0) or (paths.indexOf('..\\') == 0)
-        return @replaceAll '\\', '/', resolve(cwd + '/../' + paths)
+        return @replaceAll '\\', '/', (cwd + '/../' + paths)
       else
         return paths
+      ###
+
+      rcwd = resolve '.'
+      if (paths.indexOf('/') != 0) and (paths.indexOf('\\') != 0) and (paths.indexOf('./') != 0) and (paths.indexOf('.\\') != 0) and (paths.indexOf('../') != 0) and (paths.indexOf('..\\') != 0)
+        return paths
+      else
+        return @replaceAll '\\', '/', (@replaceAll rcwd+sep, '', (@replaceAll rcwd+sep, '', (resolve cwd, paths)))
 
   # Obtains the file name from the given full filepath.
   getFileName: (fullpath)->
@@ -135,9 +172,9 @@ class Util
         ret += 'Directory removed \"'+path+'\"\n'
       return ret
     else
-      return @rkdir [paths]
+      return @rmdir [paths]
 
-  # Removes the given directory/-ies.
+  # Renames the given file/-es or/and directory/-ies.
   rename: (oldpath, newpath) ->
     fs.renameSync oldpath, newpath, (e) -> return
     return 'File/directory renamed: '+oldpath+'\n'

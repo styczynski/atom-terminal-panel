@@ -1,6 +1,6 @@
 {
   "name": "atom-terminal-panel",
-  "main": "./lib/cli-status",
+  "main": "./lib/atp",
   "version": "4.4.3",
   "description": "An advanced ATOM terminal interface. Fork of awesome atom package - terminal-panel",
   "repository": "https://github.com/isis97/atom-terminal-panel",
@@ -11,10 +11,7 @@
   "dependencies": {
     "ansi-html-stream": "0.0.3",
     "atom-space-pen-views": "^2.0.3",
-    "domify": "~1.2.2",
-    "domutil": "~0.2.1",
-    "jquery-autocomplete-js": "^1.0.3",
-    "iconv-lite": "^0.4.7",
-    "jquery": "^2"
+    "jquery-autocomplete-js": "^1.0.6",
+    "iconv-lite": "^0.4.7"
   }
 }

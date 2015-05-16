@@ -1,0 +1,50 @@
+###
+  Atom-terminal-panel
+  Copyright by isis97
+  MIT licensed
+
+  Menu for the plugin.
+###
+'context-menu':
+  '.atp-panel-body': [
+    { 'label': 'Copy', 'command': 'atom-terminal-panel:context-copy-output-selection' }
+    { 'label': 'Copy and execute', 'command': 'atom-terminal-panel:context-copy-and-execute-output-selection' }
+    { 'label': 'Copy raw output', 'command': 'atom-terminal-panel:context-copy-raw-output' }
+    { 'label': 'Copy html-formatted output', 'command': 'atom-terminal-panel:context-copy-html-output' }
+    {
+      'label': 'Terminal'
+      'submenu': [
+        { 'label': 'Hide', 'command': 'atom-terminal-panel:hide' }
+        { 'label': 'Close', 'command': 'atom-terminal-panel:destroy' }
+      ]
+    }
+  ]
+'menu': [
+  {
+    'label': 'Packages'
+    'submenu': [
+      'label': 'Atom terminal Panel'
+      'submenu': [
+        {
+          'label': 'Instance'
+          'submenu': [
+            { 'label': 'Destroy current instance', 'command': 'atom-terminal-panel:destroy' }
+            { 'label': 'Toggle', 'command': 'atom-terminal-panel:toggle' }
+            { 'label': 'Previous instance', 'command': 'atom-terminal-panel:prev' }
+            { 'label': 'Next instance', 'command': 'atom-terminal-panel:next' }
+            { 'label': 'New instance', 'command': 'atom-terminal-panel:new' }
+            { 'label': 'Hide instance', 'command': 'atom-terminal-panel:hide' }
+          ]
+        }
+        {
+          'label': 'Configuration'
+          'submenu': [
+            { 'label': 'Reload configuration', 'command': 'atom-terminal-panel:reload-config' }
+            { 'label': 'Open configuration file', 'command': 'atom-terminal-panel:open-config' }
+          ]
+        }
+        { 'label': 'Show command finder', 'command': 'atom-terminal-panel:show-command-finder' }
+      ]
+    ]
+  }
+]

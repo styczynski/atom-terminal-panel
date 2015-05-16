@@ -6,9 +6,20 @@
   This file contains basic, simple utilities used by coffeescript files.
 ###
 
-window.include = (name) ->
+if not global?
+  throw "apt-utils: No global node.js namespace present."
+
+global.include = (name) ->
   if not window.cliUtilsIncludeLog?
     window.cliUtilsIncludeLog = []
+  if not name?
+    setTimeout () =>
+      atom.notifications.addError "atom-terminal-panel: Dependency error. Module with null-value name cannot be required."
+    , 500
+    return
+  if (name.indexOf 'atp-') == 0
+    name = './'+name
+
   r = null
   try
     r = require name
@@ -20,13 +31,14 @@ window.include = (name) ->
     try
       setTimeout () =>
         atom.notifications.addError "atom-terminal-panel: Dependency error. Module ["+name+"] cannot be required."
-      , 1500
+      , 500
     catch e2
     throw e
     throw "Dependency error. Module ["+name+"] cannot be required."
   return r
 
-window.generateRandomID = () ->
+
+global.generateRandomID = () ->
   length = 32
   chars = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
   result = ''

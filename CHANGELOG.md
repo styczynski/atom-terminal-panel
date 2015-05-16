@@ -1,4 +1,12 @@
 ## Changelog
+* v4.4.4
+  * Added ability to use Atom icons instead of the terminal defaults
+    * Works well with UI themes changing file icons!
+  * Rewritten some old code / developed better specs
+  * Added dynamic suggestions for files and directories
+  * Made the suggestion box less distracting (press the `ctrl` - `atom-terminal-panel:toggle-autocompletion` to show the suggestions drop down list; the live one-line suggestions are active all the time)
+  * Added dynamic variables
+    * Type `echo %(raw) %(dynamic) %(os.uptime)` and see what happens! :)
 * v4.4.3
   * Repaired deprecated calls.
   * Rewritten some part of the code.

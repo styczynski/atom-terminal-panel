@@ -3,32 +3,32 @@
   Copyright by isis97
   MIT licensed
 
-  The main terminal view class, which does the most of all work.
+  The main terminal view class, which does the most of all the work.
 ###
 
-require './cli-utils'
+lastOpenedView = null
 
-{TextEditorView, View} = include 'atom-space-pen-views'
-{spawn, exec} = include 'child_process'
-ansihtml = include 'ansi-html-stream'
-readline = include 'readline'
-{addClass, removeClass} = include 'domutil'
-{resolve, dirname, extname} = include 'path'
 fs = include 'fs'
 os = include 'os'
-window.$ = window.jQuery = include 'jquery'
-lastOpenedView = null
-CliCommandFinder = include './cli-command-finder'
-core = include './cli-core'
+{$, TextEditorView, View} = include 'atom-space-pen-views'
+{spawn, exec, execSync} = include 'child_process'
+{resolve, dirname, extname, sep} = include 'path'
+
+ansihtml = include 'ansi-html-stream'
 stream = include 'stream'
 iconv = include 'iconv-lite'
+
+ATPCommandFinderView = include 'atp-command-finder'
+ATPCore = include 'atp-core'
+ATPCommandsBuiltins = include 'atp-builtins-commands'
+ATPVariablesBuiltins = include 'atp-builtins-variables'
+
+window.$ = window.jQuery = $
 include 'jquery-autocomplete-js'
-commandsBuiltins = include './cli-builtins-commands'
-variablesBuiltins = include './cli-builtins-variables'
 
 
 module.exports =
-class CommandOutputView extends View
+class ATPOutputView extends View
   cwd: null
   streamsEncoding: 'iso-8859-3'
   _cmdintdel: 50
@@ -38,10 +38,22 @@ class CommandOutputView extends View
   inputLine: 0
   helloMessageShown: false
   minHeight: 250
-  util: include './cli-terminal-util'
+  util: include 'atp-terminal-util'
   currentInputBox: null
   currentInputBox: null
   currentInputBoxTmr: null
+  volatileSuggestions: []
+  disposables:
+    dispose: (field) =>
+      if not this[field]?
+        this[field] = []
+      a = this[field]
+      for i in [0..a.length-1] by 1
+        a[i].dispose()
+    add: (field, value) =>
+      if not this[field]?
+        this[field] = []
+      this[field].push value
   keyCodes: {
     enter: 13
     arrowUp: 38
@@ -49,9 +61,14 @@ class CommandOutputView extends View
     arrowLeft: 37
     arrowRight: 39
   }
+  localCommandAtomBindings: []
+  localCommands: ATPCommandsBuiltins
   @content: ->
-    @div tabIndex: -1, class: 'panel cli-status panel-bottom', =>
+    @div tabIndex: -1, class: 'panel atp-panel panel-bottom', outlet: 'atpView', =>
       @div class: 'terminal panel-divider', style: 'cursor:n-resize;width:100%;height:8px;', outlet: 'panelDivider'
+      @button outlet: 'maximizeIconBtn', class: 'atp-maximize-btn', click: 'maximize'
+      @button outlet: 'closeIconBtn', class: 'atp-close-btn', click: 'close'
+      @button outlet: 'destroyIconBtn', class: 'atp-destroy-btn', click: 'destroy'
       @div class: 'panel-heading btn-toolbar', outlet:'consoleToolbarHeading', =>
         @div class: 'btn-group', outlet:'consoleToolbar', =>
           @button outlet: 'killBtn', click: 'kill', class: 'btn hide', =>
@@ -65,31 +82,36 @@ class CommandOutputView extends View
           @span 'Open config'
         @button outlet: 'reloadConfigBtn', class: 'btn icon icon-gear inline-block-tight button-settings', click: 'reloadSettings', =>
           @span 'Reload config'
-      @div class: 'cli-panel-body', =>
+      @div class: 'atp-panel-body', =>
         @pre class: "terminal", outlet: "cliOutput"
 
-  localCommandAtomBindings: []
-  localCommands: commandsBuiltins
+  toggleAutoCompletion: () ->
+    if @currentInputBoxCmp?
+      @currentInputBoxCmp.enable()
+      @currentInputBoxCmp.repaint()
+      @currentInputBoxCmp.showDropDown()
+      @currentInputBox.find('.terminal-input').height('100px');
+
+  fsSpy: () ->
+    @volatileSuggestions = []
+    if @cwd?
+      fs.readdir @cwd, (err, files) =>
+        if files?
+          for file in files
+            @volatileSuggestions.push file
 
   turnSpecsMode: (state) ->
     @specsMode = state
 
-  os: () ->
-    isWindows = false
-    isMac = false
-    isLinux = false
-    osname = process.platform or process.env.OS
-    if /^win/igm.test osname
-      isWindows = true
-    else if /^darwin/igm.test osname
-      isMac = true
-    else if /^linux/igm.test osname
-      isLinux = true
-    return {
-      windows: isWindows
-      mac: isMac
-      linux: isLinux
-    }
+  getRawOutput: () ->
+    t = @getHtmlOutput().replace(/<[^>]*>/igm, "")
+    t = @util.replaceAll "&gt;", ">", t
+    t = @util.replaceAll "&lt;", "<", t
+    t = @util.replaceAll "&quot;", "\"", t
+    return t
+
+  getHtmlOutput: () ->
+    return @cliOutput.html()
 
   resolvePath: (path) ->
     path = @util.replaceAll '\"', '', path
@@ -105,12 +127,12 @@ class CommandOutputView extends View
     @onCommand 'update'
 
   showSettings: () ->
-    core.reload()
+    ATPCore.reload()
     setTimeout () =>
       panelPath = atom.packages.resolvePackagePath 'atom-terminal-panel'
       atomPath = resolve panelPath+'/../..'
       configPath = atomPath + '/terminal-commands.json'
-      atom.workspaceView.open configPath
+      atom.workspace.open configPath
     , 50
 
   focusInputBox: () ->
@@ -127,31 +149,26 @@ class CommandOutputView extends View
       .val(val)
 
   removeInputBox: () ->
-    @cliOutput.find('.cli-dynamic-input-box').remove()
+    @cliOutput.find('.atp-dynamic-input-box').remove()
 
   putInputBox: () ->
     if @currentInputBoxTmr?
       clearInterval @currentInputBoxTmr
       @currentInputBoxTmr = null
 
-    @cliOutput.find('.cli-dynamic-input-box').remove()
-    prompt = @getCommandPrompt('')+" "
+    @cliOutput.find('.atp-dynamic-input-box').remove()
+    prompt = @getCommandPrompt('')
     @currentInputBox = $(
-      '<div style="width: 100%; white-space:nowrap; overflow:hidden; display:inline-block;" class="cli-dynamic-input-box">' +
-      prompt +
-      '<div style="position:relative; top:5px; max-height:500px; width: 100%; white-space:nowrap; overflow:hidden; display:inline-block;" class="terminal-input native-key-bindings"></div>' +
+      '<div style="width: 100%; white-space:nowrap; overflow:hidden; display:inline-block;" class="atp-dynamic-input-box">' +
+      '<div style="position:relative; top:5px; max-height:500px; width: 100%; bottom: -10px; height: 20px; white-space:nowrap; overflow:hidden; display:inline-block;" class="terminal-input native-key-bindings"></div>' +
       '</div>'
     )
+    @currentInputBox.prepend '&nbsp;&nbsp;'
+    @currentInputBox.prepend prompt
 
-    @currentInputBox.keypress (e) =>
-       code = e.keyCode or e.which
-       if code == @keyCodes.enter
-         #@removeInputBox()
-         # @putInputBox()
-         @onCommand()
-
-    @cliOutput.click () =>
-      @focusInputBox()
+    #@cliOutput.mousedown (e) =>
+    #  if e.which is 1
+    #    @focusInputBox()
 
     history = []
     if @currentInputBoxCmp?
@@ -159,12 +176,66 @@ class CommandOutputView extends View
     inputComp = @currentInputBox.find '.terminal-input'
 
     @currentInputBoxCmp = inputComp.autocomplete {
+      animation: [
+        ['opacity', 0, 0.8]
+      ]
+      isDisabled: true
       inputHistory: history
       inputWidth: '80%'
+      dropDownWidth: '30%'
+      dropDownDescriptionBoxWidth: '30%'
+      dropDownPosition: 'top'
       showDropDown: atom.config.get 'atom-terminal-panel.enableConsoleSuggestionsDropdown'
     }
-    options = @getCommandsNames()
-    @currentInputBoxCmp.options = options
+    @currentInputBoxCmp
+    .confirmed(() =>
+      @currentInputBoxCmp.disable().repaint()
+      @onCommand()
+    ).changed((inst, text) =>
+      if inst.getText().length <= 0
+        @currentInputBoxCmp.disable().repaint()
+        @currentInputBox.find('.terminal-input').height('20px')
+    )
+
+    @currentInputBoxCmp.input.keydown((e) =>
+      if (e.keyCode == 17) and (@currentInputBoxCmp.getText().length > 0)
+        ###
+        @currentInputBoxCmp.enable().repaint()
+        @currentInputBoxCmp.showDropDown()
+        @currentInputBox.find('.terminal-input').height('100px');
+        ###
+      else if (e.keyCode == 32) or (e.keyCode == 8)
+        @currentInputBoxCmp.disable().repaint()
+        @currentInputBox.find('.terminal-input').height('20px')
+    )
+
+    endsWith = (text, suffix) ->
+      return text.indexOf(suffix, text.length - suffix.length) != -1
+
+    @currentInputBoxCmp.options = (instance, text, lastToken) =>
+      token = lastToken
+      if not token?
+        token = ''
+
+      if not (endsWith(token, '/') or endsWith(token, '\\'))
+        token = @util.replaceAll '\\', sep, token
+        token = token.split sep
+        token.pop()
+        token = token.join(sep)
+        if not endsWith(token, sep)
+          token = token + sep
+
+      o = @getCommandsNames().concat(@volatileSuggestions)
+      fsStat = []
+      if token?
+        try
+          fsStat = fs.readdirSync(token)
+          for i in [0..fsStat.length-1] by 1
+            fsStat[i] = token + fsStat[i]
+        catch e
+      ret = o.concat(fsStat)
+      return ret
+
     @currentInputBoxCmp.hideDropDown()
     setTimeout () =>
    	 @currentInputBoxCmp.input.focus()
@@ -203,16 +274,27 @@ class CommandOutputView extends View
 
   init: () ->
 
+
+    ###
+    TODO: test-autocomplete Remove this!
+    el = $('<div style="z-index: 9999; position: absolute; left: 200px; top: 200px;" id="glotest"></div>')
+    el.autocomplete({
+      inputWidth: '80%'
+    })
+    $('body').append(el)
+    ###
+
+
     lastY = -1
     mouseDown = false
     panelDraggingActive = false
     @panelDivider
-    .on 'mousedown', () => panelDraggingActive = true
-    .on 'mouseup', () => panelDraggingActive = false
+    .mousedown () => panelDraggingActive = true
+    .mouseup () => panelDraggingActive = false
     $(document)
-    .on 'mousedown', () => mouseDown = true
-    .on 'mouseup', () => mouseDown = false
-    .on 'mousemove', (e) =>
+    .mousedown () => mouseDown = true
+    .mouseup () => mouseDown = false
+    .mousemove (e) =>
       if mouseDown and panelDraggingActive
         if lastY != -1
           delta = e.pageY - lastY
@@ -227,7 +309,7 @@ class CommandOutputView extends View
       fullpath = resolve "../commands/" +folder
       console.log ("Require atom-terminal-panel plugin: "+folder+"\n") if atom.config.get('atom-terminal-panel.logConsole') or @specsMode
       obj = require ("../commands/" +folder+"/index.coffee")
-      console.log "Plugin loaded."
+      console.log "Plugin loaded." if atom.config.get('atom-terminal-panel.logConsole')
       @resolvePluginDependencies fullpath, obj
       for key, value of obj
         if value.command?
@@ -236,12 +318,12 @@ class CommandOutputView extends View
           @localCommands[key].sourcefile = folder
         else if value.variable?
           value.name = key
-          variablesBuiltins.putVariable value
+          ATPVariablesBuiltins.putVariable value
     )
-    console.log ("All plugins were loaded.") if atom.config.get('atom-terminal-panel.logConsole') or @specsMode
+    console.log ("All plugins were loaded.") if atom.config.get('atom-terminal-panel.logConsole')
 
-    if core.getConfig()?
-      actions = core.getConfig().actions
+    if ATPCore.getConfig()?
+      actions = ATPCore.getConfig().actions
       if actions?
         for action in actions
           if action.length > 1
@@ -270,7 +352,7 @@ class CommandOutputView extends View
         com.source = "internal-atom"
         @localCommands[comName] = com
 
-    toolbar = core.getConfig().toolbar
+    toolbar = ATPCore.getConfig().toolbar
     if toolbar?
       toolbar.reverse()
       for com in toolbar
@@ -288,11 +370,14 @@ class CommandOutputView extends View
   commandLineNotCounted: () ->
     @inputLine--
 
-  parseSpecialStringTemplate: (prompt, values) =>
-    return variablesBuiltins.parse(this, prompt, values)
+  parseSpecialStringTemplate: (prompt, values, isDOM=false) =>
+    if isDOM
+      return ATPVariablesBuiltins.parseHtml(this, prompt, values)
+    else
+      return ATPVariablesBuiltins.parse(this, prompt, values)
 
   getCommandPrompt: (cmd) ->
-    return @parseTemplate atom.config.get('atom-terminal-panel.commandPrompt'), {cmd: cmd}
+    return @parseTemplate atom.config.get('atom-terminal-panel.commandPrompt'), {cmd: cmd}, true
 
   delay: (callback, delay=100) ->
     setTimeout callback, delay
@@ -330,14 +415,18 @@ class CommandOutputView extends View
     return null
 
 
-  parseTemplate: (text, vars) ->
+  parseTemplate: (text, vars, isDOM=false) ->
     if not vars?
       vars = {}
-    ret = @parseSpecialStringTemplate text, vars
-    ret = @util.replaceAll '%(file-original)', @getCurrentFilePath(), ret
-    ret = @util.replaceAll '%(cwd-original)', @getCwd(), ret
-    ret = @util.replaceAll '&fs;', '/', ret
-    ret = @util.replaceAll '&bs;', '\\', ret
+    ret = ''
+    if isDOM
+      ret = ATPVariablesBuiltins.parseHtml this, text, vars
+    else
+      ret = @parseSpecialStringTemplate text, vars
+      ret = @util.replaceAll '%(file-original)', @getCurrentFilePath(), ret
+      ret = @util.replaceAll '%(cwd-original)', @getCwd(), ret
+      ret = @util.replaceAll '&fs;', '/', ret
+      ret = @util.replaceAll '&bs;', '\\', ret
     return ret
 
   parseExecToken__: (cmd, args, strArgs) ->
@@ -407,7 +496,7 @@ class CommandOutputView extends View
 
       command = null
       if @isCommandEnabled(cmd)
-        command = core.findUserCommand(cmd)
+        command = ATPCore.findUserCommand(cmd)
       if command?
         if not state?
           ret = null
@@ -466,7 +555,7 @@ class CommandOutputView extends View
     return null
 
   getCommandsRegistry: () ->
-    global_vars = variablesBuiltins.list
+    global_vars = ATPVariablesBuiltins.list
 
     for key, value of process.env
       global_vars['%(env.'+key+')'] = "access native environment variable: "+key
@@ -482,7 +571,7 @@ class CommandOutputView extends View
         sourcefile: cmd_body.sourcefile
         source: cmd_body.source or 'internal'
       }
-    for cmd_name, cmd_body of core.getUserCommands()
+    for cmd_name, cmd_body of ATPCore.getUserCommands()
       cmd.push {
         name: cmd_name
         description: cmd_body.description
@@ -556,7 +645,7 @@ class CommandOutputView extends View
 
   getLocalCommandsMemdump: () ->
     cmd = @getCommandsRegistry()
-    commandFinder = new CliCommandFinder cmd
+    commandFinder = new ATPCommandFinderView cmd
     commandFinderPanel = atom.workspace.addModalPanel(item: commandFinder)
     commandFinder.shown commandFinderPanel, this
     return
@@ -576,32 +665,42 @@ class CommandOutputView extends View
     if atom.config.get 'atom-terminal-panel.enableConsoleStartupInfo' or forceShow or (not @specsMode)
       changelog_path = require("path").join(__dirname, "../CHANGELOG.md");
       readme_path = require("path").join(__dirname, "../README.md");
-      hello_message = @consolePanel 'ATOM Terminal', 'Please enter new commands to the box below.<br>The console supports special anotattion like: %(path), %(file), %(link)file.something%(endlink).<br>It also supports special HTML elements like: %(tooltip:A:content:B) and so on.<br>Hope you\'ll enjoy the terminal.'+
+      hello_message = @consolePanel 'ATOM Terminal', 'Please enter new commands to the box below. (ctrl-to show suggestions dropdown)<br>The console supports special anotattion like: %(path), %(file), %(link)file.something%(endlink).<br>It also supports special HTML elements like: %(tooltip:A:content:B) and so on.<br>Hope you\'ll enjoy the terminal.'+
       "<br><a class='changelog-link' href='#{changelog_path}'>See changelog</a>&nbsp;&nbsp;<a class='readme-link' href='#{readme_path}'>and the README! :)</a>"
       @rawMessage hello_message
       $('.changelog-link').css('font-weight','300%').click(() =>
-          atom.workspaceView.open changelog_path
+          atom.workspace.open changelog_path
       )
       $('.readme-link').css('font-weight','300%').click(() =>
-          atom.workspaceView.open readme_path
+          atom.workspace.open readme_path
       )
       @helloMessageShown = true
     return this
 
   onCommand: (inputCmd) ->
+    @fsSpy()
+
     if not inputCmd?
       inputCmd = @readInputBox()
+
+    @disposables.dispose('statusIconTooltips')
+    @disposables.add 'statusIconTooltips', atom.tooltips.add @statusIcon,
+     title: 'Task: \"'+inputCmd+'\"'
+     delay: 0
+     animation: false
 
     @inputLine++
     inputCmd = @parseSpecialStringTemplate inputCmd
 
     if @echoOn
-      @message "\n"+@getCommandPrompt(inputCmd)+" "+inputCmd+"\n", false
+      console.log 'echo-on'
+      #TODO: Repair!
+      #@message "\n"+@getCommandPrompt(inputCmd)+" "+inputCmd+"\n", false
 
     ret = @exec inputCmd, null, this, () =>
       setTimeout () =>
         @putInputBox()
-      , 0
+      , 750
     if ret?
       @message ret + '\n'
 
@@ -611,7 +710,7 @@ class CommandOutputView extends View
     @putInputBox()
     setTimeout () =>
       @putInputBox()
-    , 250
+    , 750
     # TODO: Repair this above, making input box less buggy!
 
     return null
@@ -624,10 +723,7 @@ class CommandOutputView extends View
         process.env = JSON.parse(stdout)
       catch e
     atom.commands.add 'atom-workspace',
-      "cli-status:toggle-output": => @toggle()
-
-    @on "core:confirm", =>
-      return @onCommand()
+      "atp-status:toggle-output": => @toggle()
 
   clear: ->
     @cliOutput.empty()
@@ -647,13 +743,15 @@ class CommandOutputView extends View
     @cliOutput.scrollTop 10000000
 
   flashIconClass: (className, time=100)=>
-    addClass @statusIcon, className
+    @statusIcon.addClass className
     @timer and clearTimeout(@timer)
     onStatusOut = =>
-      removeClass @statusIcon, className
+      @statusIcon.removeClass className
     @timer = setTimeout onStatusOut, time
 
   destroy: ->
+    @statusIcon.remove()
+
     _destroy = =>
       if @hasParent()
         @close()
@@ -695,7 +793,6 @@ class CommandOutputView extends View
     killProcess pid, 'SIGINT'
 
 
-
   kill: ->
     if @program
       @terminateProcessTree @program.pid
@@ -704,14 +801,16 @@ class CommandOutputView extends View
       @program.kill()
       @message (@consoleLabel 'info', 'info')+(@consoleText 'info', 'Process has been stopped')
 
+  maximize: ->
+    @cliOutput.height (@cliOutput.height()+9999)
+
   open: ->
-    if atom.config.get('atom-terminal-panel.moveToCurrentDirOnOpen')
+    if (atom.config.get('atom-terminal-panel.moveToCurrentDirOnOpen')) and (not @specsMode)
       @moveToCurrentDirectory()
-    if atom.config.get('atom-terminal-panel.moveToCurrentDirOnOpenLS')
+    if (atom.config.get('atom-terminal-panel.moveToCurrentDirOnOpenLS')) and (not @specsMode)
       @clear()
       @execDelayedCommand @_cmdintdel, 'ls', null, this
 
-    @lastLocation = atom.workspace.getActivePane()
     atom.workspace.addBottomPanel(item: this) unless @hasParent()
     if lastOpenedView and lastOpenedView != this
       lastOpenedView.close()
@@ -732,7 +831,6 @@ class CommandOutputView extends View
      title: 'Open the terminal config file.'
     atom.tooltips.add @reloadConfigBtn,
      title: 'Reload the terminal configuration.'
-
 
     if atom.config.get 'atom-terminal-panel.enableWindowAnimations'
       @WindowMinHeight = @cliOutput.height() + 50
@@ -756,11 +854,9 @@ class CommandOutputView extends View
       }, 250, =>
         @attr 'style', ''
         @consoleToolbar.attr 'style', ''
-        @lastLocation.activate()
         @detach()
         lastOpenedView = null
     else
-      @lastLocation.activate()
       @detach()
       lastOpenedView = null
 
@@ -785,16 +881,15 @@ class CommandOutputView extends View
     args = [atom.project.path] if not args[0]
     args = @removeQuotes args
     dir = resolve @getCwd(), args[0]
-    fs.stat dir, (err, stat) =>
-      if err
-        if err.code == 'ENOENT'
-          return @errorMessage "cd: #{args[0]}: No such file or directory"
-        return @errorMessage err.message
+    try
+      stat = fs.statSync dir
       if not stat.isDirectory()
         return @errorMessage "cd: not a directory: #{args[0]}"
       @cwd = dir
       @putInputBox()
-
+    catch e
+      return @errorMessage "cd: #{args[0]}: No such file or directory"
+    return null
 
   ls: (args) ->
     try
@@ -834,7 +929,7 @@ class CommandOutputView extends View
     caller = this
 
     if atom.config.get 'atom-terminal-panel.enableConsoleInteractiveHints'
-      $('.cli-tooltip[data-toggle="tooltip"]').each(() ->
+      $('.atp-tooltip[data-toggle="tooltip"]').each(() ->
           title = $(this).attr('title')
           atom.tooltips.add $(this), {}
       )
@@ -860,7 +955,7 @@ class CommandOutputView extends View
             el.click () ->
               el.addClass('link-used')
               if link_type == 'file'
-                atom.workspaceView.open link_target, {
+                atom.workspace.open link_target, {
                   initialLine: link_target_line
                   initialColumn: link_target_column
                 }
@@ -956,11 +1051,20 @@ class CommandOutputView extends View
 
     file_exists = true
 
-    classes = ['icon']
+    filepath = @resolvePath filename
+    classes = []
+    dataname = ''
+
+    if atom.config.get('atom-terminal-panel.useAtomIcons')
+      classes.push 'name'
+      classes.push 'icon'
+      classes.push 'icon-file-text'
+      dataname = filepath
+    else
+      classes.push 'name'
+
     if use_file_info_class
       classes.push 'file-info'
-
-    filepath = @resolvePath filename
 
     stat = null
     if file_exists
@@ -1007,7 +1111,7 @@ class CommandOutputView extends View
 
     href = 'file:///' + @util.replaceAll('\\', '/', filepath)
 
-    classes.push 'cli-tooltip'
+    classes.push 'atp-tooltip'
 
     exattrs = []
     if fileline?
@@ -1017,7 +1121,7 @@ class CommandOutputView extends View
 
     filepath_tooltip = @util.replaceAll '\\', '/', filepath
     filepath = @util.replaceAll '\\', '/', filepath
-    ["<font class=\"file-extension\"><#{wrapper_class} #{exattrs.join ' '} tooltip=\"\" data-targetname=\"#{filename}\" data-targettype=\"#{target_type}\" data-target=\"#{filepath}\" class=\"#{classes.join ' '}\" data-toggle=\"tooltip\" data-placement=\"top\" title=\"#{filepath_tooltip}\" >#{filename}</#{wrapper_class}></font>", stat, filename]
+    ["<font class=\"file-extension\"><#{wrapper_class} #{exattrs.join ' '} tooltip=\"\" data-targetname=\"#{filename}\" data-targettype=\"#{target_type}\" data-target=\"#{filepath}\" data-name=\"#{dataname}\" class=\"#{classes.join ' '}\" data-toggle=\"tooltip\" data-placement=\"top\" title=\"#{filepath_tooltip}\" >#{filename}</#{wrapper_class}></font>", stat, filename]
 
   getGitStatusName: (path, gitRoot, repo) ->
     status = (repo.getCachedPathStatus or repo.getPathStatus)(path)
@@ -1096,7 +1200,7 @@ class CommandOutputView extends View
     message = @util.replaceAll '&fs;', '/', message
     message = @util.replaceAll '&bs;', '\\', message
 
-    rules = core.getConfig().rules
+    rules = ATPCore.getConfig().rules
     for key, value of rules
       matchExp = key
       replExp = '%(content)'
@@ -1130,9 +1234,9 @@ class CommandOutputView extends View
         message = message.replace regex, (match, groups...) =>
           style = ''
           if value.css?
-            style = core.jsonCssToInlineStyle value.css
+            style = ATPCore.jsonCssToInlineStyle value.css
           else if not value.match?
-            style = core.jsonCssToInlineStyle value
+            style = ATPCore.jsonCssToInlineStyle value
           vars =
             content: match
             0: match
@@ -1142,7 +1246,7 @@ class CommandOutputView extends View
             if groups[i]?
               vars[i+1] = groups[i]
 
-          console.log 'Active rule => '+matchExp
+          # console.log 'Active rule => '+matchExp
           repl = @parseSpecialStringTemplate replExp, vars
           return "<font style=\"#{style}\">#{repl}</font>"
 
@@ -1163,8 +1267,8 @@ class CommandOutputView extends View
 
     @cliOutput.append message
     @showCmd()
-    removeClass @statusIcon, 'status-error'
-    addClass @statusIcon, 'status-success'
+    @statusIcon.removeClass 'status-error'
+    @statusIcon.addClass 'status-success'
     # @parseSpecialNodes()
 
   message: (message, matchSpec=true) ->
@@ -1172,23 +1276,28 @@ class CommandOutputView extends View
       console.log message
       return
 
-    if not message?
-      return
-    mes = message.split '%(break)'
-    if mes.length > 1
-      for m in mes
-        @message m
-      return
+    if typeof message is 'object'
+      mes = message
     else
-      mes = mes[0]
+      if not message?
+        return
+      mes = message.split '%(break)'
+      if mes.length > 1
+        for m in mes
+          @message m
+        return
+      else
+        mes = mes[0]
+      mes = @parseMessage message, matchSpec, matchSpec
+      mes = @util.replaceAll '%(raw)', '', mes
+      mes = @parseTemplate mes, [], true
 
-    mes = @parseMessage message, matchSpec, matchSpec
     # mes = @util.replaceAll '<', '&lt;', mes
     # mes = @util.replaceAll '>', '&gt;', mes
     @cliOutput.append mes
     @showCmd()
-    removeClass @statusIcon, 'status-error'
-    addClass @statusIcon, 'status-success'
+    @statusIcon.removeClass 'status-error'
+    @statusIcon.addClass 'status-success'
     @parseSpecialNodes()
     @scrollToBottom()
     # @putInputBox()
@@ -1196,8 +1305,8 @@ class CommandOutputView extends View
   errorMessage: (message) ->
     @cliOutput.append @parseMessage(message)
     @showCmd()
-    removeClass @statusIcon, 'status-success'
-    addClass @statusIcon, 'status-error'
+    @statusIcon.removeClass 'status-success'
+    @statusIcon.addClass 'status-error'
     @parseSpecialNodes()
 
   correctFilePath: (path) ->
@@ -1256,27 +1365,27 @@ class CommandOutputView extends View
       @program.stdout.pipe htmlStream
       @program.stderr.pipe htmlStream
 
-      removeClass @statusIcon, 'status-success'
-      removeClass @statusIcon, 'status-error'
-      addClass @statusIcon, 'status-running'
+      @statusIcon.removeClass 'status-success'
+      @statusIcon.removeClass 'status-error'
+      @statusIcon.addClass 'status-running'
       @killBtn.removeClass 'hide'
       @program.once 'exit', (code) =>
         console.log 'exit', code if atom.config.get('atom-terminal-panel.logConsole') or @specsMode
         @killBtn.addClass 'hide'
-        removeClass @statusIcon, 'status-running'
+        @statusIcon.removeClass 'status-running'
         # removeClass @statusIcon, 'status-error'
         @program = null
-        addClass @statusIcon, code == 0 and 'status-success' or 'status-error'
+        @statusIcon.addClass code == 0 and 'status-success' or 'status-error'
         @showCmd()
         @spawnProcessActive = false
       @program.on 'error', (err) =>
         console.log 'error' if atom.config.get('atom-terminal-panel.logConsole') or @specsMode
         @message(err.message)
         @showCmd()
-        addClass @statusIcon, 'status-error'
+        @statusIcon.addClass 'status-error'
       @program.stdout.on 'data', =>
         @flashIconClass 'status-info'
-        removeClass @statusIcon, 'status-error'
+        @statusIcon.removeClass 'status-error'
       @program.stderr.on 'data', =>
         console.log 'stderr' if atom.config.get('atom-terminal-panel.logConsole') or @specsMode
         @flashIconClass 'status-error', 300

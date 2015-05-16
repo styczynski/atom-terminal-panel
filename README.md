@@ -1,8 +1,7 @@
-[![SHIELD](https://img.shields.io/badge/license-MIT-blue.svg?style=flat-square)](https://github.com/isis97/atom-terminal-panel)
-[![SHIELD](http://img.shields.io/github/tag/isis97/atom-terminal-panel.svg?style=flat-square)](https://github.com/isis97/atom-terminal-panel)
 
-
-
+![Shields.io badge](https://img.shields.io/apm/v/atom-terminal-panel.svg?style=flat-square)
+![Shields.io badge](https://img.shields.io/apm/dm/atom-terminal-panel.svg?style=flat-square)
+![Shields.io badge](https://img.shields.io/apm/l/atom-terminal-panel.svg?style=flat-square)
 
 atom-terminal-panel
 ==============
@@ -12,18 +11,18 @@ Plugin for ATOM Editor.
 
 ## Short note
 
-This project uses `jquery-autocomplete-js` for autocompletion. [See git repo](https://github.com/isis97/autocomplete-js)
+This project uses [jquery-autocomplete-js](http://isis97.github.io/autocomplete-js/) for autocompletion.
 
 ## Development
 
 This project is in alpha stage.
 Please contribute this project if you liked it.
 All the help is welcome.
-Feel free to propose new feautures, modify existing code, report issues.
 Thank you.
 
 ## Usage
 Just press `shift-enter` or just `` Ctrl + ` `` (control + backtick) and enjoy your cool ATOM terminal :D
+Try pressing the `ctrl` in the terminal for dynamic suggestions list!
 
 ## Screenshot
 
@@ -34,10 +33,6 @@ Terminal with fancy file links and interactive interface.
 Fancy custom highlighting rules.
 
 ![A screenshot of atom-terminal-panel package](https://raw.githubusercontent.com/isis97/atom-terminal-panel/master/static/example3.gif)
-
-Custom highlighting and few commands (old version):
-
-![A screenshot of atom-terminal-panel package](https://raw.githubusercontent.com/isis97/atom-terminal-panel/master/static/example2.gif)
 
 There's also nice looking easy-to-use command finder dialog (just to search your custom commands and terminal build-ins):
 
@@ -70,6 +65,8 @@ There's also nice looking easy-to-use command finder dialog (just to search your
 * modular commands system
   * To add new commands just write your own /or download existing plugin!
   * And copy it to the ./commands directory! - Easy, right?
+
+And a lot more! See it by yourself!
 
 ## Plugins
 
@@ -293,6 +290,8 @@ You can use special annotation (on commands/rules definitions or in settings - c
 | Property name | Usage context | Description |
 |----------------------------------------------------------------------------------------------------|---------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | `;;` | R/T/A | Divides the commands (commands divided by this will be executed separatly; one after another) |
+| `%(dynamic)` | R/T/A | Indicates that the value should be dynamically updated. Usage example: `echo %(raw) %(dynamic) <ANY CONTENT WITH VARIABLES>` |
+| `%(raw)` | R/T/A | Used to delay the variables expansion (the variables are expanded only at output - can be used with `echo` and `%(dynamic)` to create dynamic entries) |
 | `%(project.root)` | R/T/A | Refers to the first currently opened project directory |
 | `%(project.count)` | R/T/A | Refers to the number of the currently opened project directories |
 | `%(project:[index])` | R/T/A | Refers to the choosen currently opened project directory |

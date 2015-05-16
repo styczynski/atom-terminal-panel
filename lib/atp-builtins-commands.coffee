@@ -6,8 +6,7 @@
   Class containing all builtin commands.
 ###
 
-require './cli-utils'
-core = include './cli-core'
+core = include 'atp-core'
 
 module.exports =
   "encode":
