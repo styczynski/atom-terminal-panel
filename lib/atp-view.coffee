@@ -394,24 +394,29 @@ class ATPOutputView extends View
       @cd [CURRENT_LOCATION]
 
   getCurrentFileName: ()->
-    current_file = @getCurrentFilePath()
+    current_file = @getCurrentFile()
     if current_file != null
-      matcher = /(.*:)((.*)\\)*/ig
-      return current_file.replace matcher, ""
+      current_file.getBaseName()
     return null
 
   getCurrentFileLocation: ()->
-    if @getCurrentFilePath() == null
-      return null
-    return  @util.replaceAll(@getCurrentFileName(), "", @getCurrentFilePath())
+    current_file = @getCurrentFile()
+    if current_file?
+      return current_file.getPath().replace ///#{current_file.getBaseName()}$///, ""
 
   getCurrentFilePath: ()->
+    file = @getCurrentFile()
+    if file?
+      return file.getPath()
+    return null
+
+  getCurrentFile: ()->
     if not atom.workspace?
       return null
     te = atom.workspace.getActiveTextEditor()
     if te?
       if te.getPath()?
-        return te.getPath()
+        return te.buffer.file
     return null
 
 
