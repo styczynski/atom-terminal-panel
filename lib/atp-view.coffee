@@ -735,7 +735,7 @@ class ATPOutputView extends View
     @message '\n'
     @putInputBox()
 
-  adjustWindowHeight: ->
+  setMaxWindowHeight: ->
     maxHeight = atom.config.get('atom-terminal-panel.WindowHeight')
     @cliOutput.css("max-height", "#{maxHeight}px")
     $('.terminal-input').css("max-height", "#{maxHeight}px")
@@ -820,6 +820,7 @@ class ATPOutputView extends View
     if lastOpenedView and lastOpenedView != this
       lastOpenedView.close()
     lastOpenedView = this
+    @setMaxWindowHeight()
     @scrollToBottom()
     @statusView.setActiveCommandView this
     @focusInputBox()
