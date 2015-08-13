@@ -127,7 +127,6 @@ class ATPOutputView extends View
     @onCommand 'update'
 
   showSettings: () ->
-    ATPCore.reload()
     setTimeout () =>
       panelPath = atom.packages.resolvePackagePath 'atom-terminal-panel'
       atomPath = resolve panelPath+'/../..'
