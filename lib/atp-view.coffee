@@ -127,7 +127,6 @@ class ATPOutputView extends View
     @onCommand 'update'
 
   showSettings: () ->
-    ATPCore.reload()
     setTimeout () =>
       panelPath = atom.packages.resolvePackagePath 'atom-terminal-panel'
       atomPath = resolve panelPath+'/../..'
@@ -394,24 +393,29 @@ class ATPOutputView extends View
       @cd [CURRENT_LOCATION]
 
   getCurrentFileName: ()->
-    current_file = @getCurrentFilePath()
-    if current_file != null
-      matcher = /(.*:)((.*)\\)*/ig
-      return current_file.replace matcher, ""
+    current_file = @getCurrentFile()
+    if current_file?
+      return current_file.getBaseName()
     return null
 
   getCurrentFileLocation: ()->
-    if @getCurrentFilePath() == null
-      return null
-    return  @util.replaceAll(@getCurrentFileName(), "", @getCurrentFilePath())
+    current_file = @getCurrentFile()
+    if current_file?
+      return current_file.getPath().replace ///#{current_file.getBaseName()}$///, ""
 
   getCurrentFilePath: ()->
+    current_file = @getCurrentFile()
+    if current_file?
+      return current_file.getPath()
+    return null
+
+  getCurrentFile: ()->
     if not atom.workspace?
       return null
     te = atom.workspace.getActiveTextEditor()
     if te?
       if te.getPath()?
-        return te.getPath()
+        return te.buffer.file
     return null
 
 
@@ -730,7 +734,7 @@ class ATPOutputView extends View
     @message '\n'
     @putInputBox()
 
-  adjustWindowHeight: ->
+  setMaxWindowHeight: ->
     maxHeight = atom.config.get('atom-terminal-panel.WindowHeight')
     @cliOutput.css("max-height", "#{maxHeight}px")
     $('.terminal-input').css("max-height", "#{maxHeight}px")
@@ -815,6 +819,7 @@ class ATPOutputView extends View
     if lastOpenedView and lastOpenedView != this
       lastOpenedView.close()
     lastOpenedView = this
+    @setMaxWindowHeight()
     @scrollToBottom()
     @statusView.setActiveCommandView this
     @focusInputBox()

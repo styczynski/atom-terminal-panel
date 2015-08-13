@@ -94,19 +94,18 @@ class ATPCore
         console.log 'atp-core cannot create default terminal commands JSON file', e.message
 
   reload: () ->
-    @state.opended = false
+    @state.opened = false
     @init()
 
   init: () ->
-    if not @state.opended
+    if not @state.opened
       @state.opened = true
       @state.statePath = dirname(atom.config.getUserConfigPath()) + '/terminal-commands.json'
       try
         @state.config = JSON.parse fs.readFileSync @state.statePath
       catch e
         console.log 'atp-core cannot reload terminal config file: invalid content', e.message
-        atom.notifications.addWarning "atom-terminal-panel: Could not load the config file. The new file will be created. Reason: "+e.message
-        @state.opened = no
+        atom.notifications.addError 'atom-terminal-panel: Could not load the config file.', {detail:e.message}
       if not @state.opened
         @createDefaultCommandsFile()
         @state.opened = true
