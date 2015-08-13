@@ -395,8 +395,8 @@ class ATPOutputView extends View
 
   getCurrentFileName: ()->
     current_file = @getCurrentFile()
-    if current_file != null
-      current_file.getBaseName()
+    if current_file?
+      return current_file.getBaseName()
     return null
 
   getCurrentFileLocation: ()->
@@ -405,9 +405,9 @@ class ATPOutputView extends View
       return current_file.getPath().replace ///#{current_file.getBaseName()}$///, ""
 
   getCurrentFilePath: ()->
-    file = @getCurrentFile()
-    if file?
-      return file.getPath()
+    current_file = @getCurrentFile()
+    if current_file?
+      return current_file.getPath()
     return null
 
   getCurrentFile: ()->
