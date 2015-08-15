@@ -105,16 +105,12 @@ class ATPCore
       @state.statePath = dirname(atom.config.getUserConfigPath()) + '/terminal-commands.json'
       try
         @state.config = JSON.parse fs.readFileSync @state.statePath
+        @state.customCommands = @state.config.commands
       catch e
-        console.log 'atp-core cannot reload terminal commands JSON file: invalid content', e.message
+        console.log 'atp-core cannot load terminal commands JSON file: invalid content', e.message
         atom.notifications.addError 'atom-terminal-panel: Could not load the terminal config file.', {detail:e.message}
         @state.config = @defaultCommandsFile()
-      if not @state.opened
-        @createDefaultCommandsFile()
-        @state.opened = true
         @state.customCommands = @state.defaultCommands
-      else
-        @state.customCommands = @state.config.commands
     return this
 
   jsonCssToInlineStyle: (obj) ->
