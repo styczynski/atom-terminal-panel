@@ -10,16 +10,16 @@
 '.platform-darwin atom-workspace':
   'shift-enter': 'atom-terminal-panel:toggle'
   'cmd-shift-t': 'atom-terminal-panel:new'
-  'cmd-shift-j': 'atom-terminal-panel:next'
-  'cmd-shift-k': 'atom-terminal-panel:prev'
+  'cmd-shift-j': 'atom-terminal-panel:prev'
+  'cmd-shift-k': 'atom-terminal-panel:next'
   'cmd-shift-x': 'atom-terminal-panel:destroy'
   'ctrl-`': 'atom-terminal-panel:toggle'
 
 '.platform-linux atom-workspace, .platform-win32 atom-workspace':
   'shift-enter': 'atom-terminal-panel:toggle'
   'alt-shift-t': 'atom-terminal-panel:new'
-  'alt-shift-j': 'atom-terminal-panel:next'
-  'alt-shift-k': 'atom-terminal-panel:prev'
+  'alt-shift-j': 'atom-terminal-panel:prev'
+  'alt-shift-k': 'atom-terminal-panel:next'
   'alt-shift-x': 'atom-terminal-panel:destroy'
   'ctrl-`': 'atom-terminal-panel:toggle'
 
