@@ -859,11 +859,8 @@ class ATPOutputView extends View
       }, 250, =>
         @attr 'style', ''
         @consoleToolbar.attr 'style', ''
-        @detach()
-        lastOpenedView = null
-    else
-      @detach()
-      lastOpenedView = null
+    @detach()
+    lastOpenedView = null
 
 
   toggle: ->
