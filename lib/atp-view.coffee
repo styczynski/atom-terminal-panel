@@ -803,7 +803,6 @@ class ATPOutputView extends View
       @program.kill('SIGINT')
       @program.kill()
       @message (@consoleLabel 'info', 'info')+(@consoleText 'info', 'Process has been stopped')
-      @message '\n'
 
   maximize: ->
     @cliOutput.height (@cliOutput.height()+9999)
@@ -1378,9 +1377,7 @@ class ATPOutputView extends View
           @statusIcon.addClass 'status-error'
           if code == 127
             @message (@consoleLabel 'error', 'Error')+(@consoleText 'error', @program.cmd + ': command not found')
-          else
-            @message (@consoleLabel 'error', 'Error')+(@consoleText 'error', 'Exit Code: ' + code)
-          @message '\n'
+            @message '\n'
         @putInputBox()
         @showCmd()
         @program = null
