@@ -809,7 +809,6 @@ class ATPOutputView extends View
       @program.stdin.pause()
       @program.kill('SIGINT')
       @program.kill()
-      @message (@consoleLabel 'info', 'info')+(@consoleText 'info', 'Process has been stopped')
 
   maximize: ->
     @cliOutput.height (@cliOutput.height()+9999)
@@ -1373,12 +1372,12 @@ class ATPOutputView extends View
       @statusIcon.addClass 'status-running'
       @killBtn.removeClass 'hide'
       @program.on 'exit', (code, signal) =>
-        console.log 'exit', code if atom.config.get('atom-terminal-panel.logConsole') or @specsMode
+        console.log 'exit', code, signal if atom.config.get('atom-terminal-panel.logConsole') or @specsMode
         @killBtn.addClass 'hide'
         @statusIcon.removeClass 'status-running'
         if code == 0
           @statusIcon.addClass 'status-success'
-        else
+        else if code?
           @statusIcon.addClass 'status-error'
           if code == 127
             @message (@consoleLabel 'error', 'Error')+(@consoleText 'error', @program.cmd + ': command not found')
@@ -1387,6 +1386,10 @@ class ATPOutputView extends View
         @showCmd()
         @program = null
         @spawnProcessActive = false
+      @program.on 'close', (code, signal) =>
+        console.log 'close' if atom.config.get('atom-terminal-panel.logConsole') or @specsMode
+        @putInputBox()
+        @showCmd()
       @program.on 'error', (err) =>
         console.log 'error' if atom.config.get('atom-terminal-panel.logConsole') or @specsMode
         @message (err.message)
@@ -1394,9 +1397,6 @@ class ATPOutputView extends View
         @putInputBox()
         @showCmd()
         @statusIcon.addClass 'status-error'
-      @program.on 'close', (code, signal) =>
-        @putInputBox()
-        @showCmd()
       @program.stdout.on 'data', =>
         @flashIconClass 'status-info'
         @statusIcon.removeClass 'status-error'
@@ -1405,5 +1405,6 @@ class ATPOutputView extends View
         @flashIconClass 'status-error', 300
 
     catch err
+      console.log 'Failed to launch process' if atom.config.get('atom-terminal-panel.logConsole') or @specsMode
       @message (err.message)
       @showCmd()
