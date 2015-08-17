@@ -240,8 +240,15 @@ class ATPOutputView extends View
    	 @currentInputBoxCmp.input.focus()
     , 0
 
-    @currentInputBox.appendTo @cliOutput
-    @focusInputBox()
+    @cliOutput.append @currentInputBox
+
+  inputBoxState: () ->
+    inputState = @cliOutput.find('.atp-dynamic-input-box').clone()
+    inputState.find('.autocomplete-wrapper').replaceWith () ->
+      input = $(this).find('.autocomplete-input')[0]
+      return $('<span/>', class: input.className, text: input.value)
+    inputState.removeClass 'atp-dynamic-input-box'
+    return inputState.prop('outerHTML') + '\n'
 
   readInputBox: () ->
     ret = ''
@@ -535,8 +542,8 @@ class ATPOutputView extends View
           cmd = @util.replaceAll '&lquot;', '\'', cmd
           @spawn cmdStr, cmd, args
           --@execStackCounter
-          if @execStackCounter==0
-            callback()
+          #if @execStackCounter==0
+          #  callback()
           if not cmd?
             return null
           return null
@@ -683,6 +690,8 @@ class ATPOutputView extends View
 
   onCommand: (inputCmd) ->
     @fsSpy()
+    @rawMessage @inputBoxState()
+    @removeInputBox()
 
     if not inputCmd?
       inputCmd = @readInputBox()
@@ -702,20 +711,11 @@ class ATPOutputView extends View
       #@message "\n"+@getCommandPrompt(inputCmd)+" "+inputCmd+"\n", false
 
     ret = @exec inputCmd, null, this, () =>
-      setTimeout () =>
-        @putInputBox()
-      , 750
+      @putInputBox()
+      @showCmd()
+
     if ret?
       @message ret + '\n'
-
-    @scrollToBottom()
-
-    # TODO: Should be removed.
-    @putInputBox()
-    setTimeout () =>
-      @putInputBox()
-    , 750
-    # TODO: Repair this above, making input box less buggy!
 
     return null
 
@@ -804,6 +804,7 @@ class ATPOutputView extends View
       @program.kill('SIGINT')
       @program.kill()
       @message (@consoleLabel 'info', 'info')+(@consoleText 'info', 'Process has been stopped')
+      @message '\n'
 
   maximize: ->
     @cliOutput.height (@cliOutput.height()+9999)
@@ -820,11 +821,11 @@ class ATPOutputView extends View
       lastOpenedView.close()
     lastOpenedView = this
     @setMaxWindowHeight()
+    @putInputBox()
     @scrollToBottom()
     @statusView.setActiveCommandView this
     @focusInputBox()
     @showInitMessage()
-    @putInputBox()
 
     atom.tooltips.add @killBtn,
      title: 'Kill the long working process.'
@@ -1272,8 +1273,6 @@ class ATPOutputView extends View
 
     @cliOutput.append message
     @showCmd()
-    @statusIcon.removeClass 'status-error'
-    @statusIcon.addClass 'status-success'
     # @parseSpecialNodes()
 
   message: (message, matchSpec=true) ->
@@ -1301,8 +1300,6 @@ class ATPOutputView extends View
     # mes = @util.replaceAll '>', '&gt;', mes
     @cliOutput.append mes
     @showCmd()
-    @statusIcon.removeClass 'status-error'
-    @statusIcon.addClass 'status-success'
     @parseSpecialNodes()
     @scrollToBottom()
     # @putInputBox()
@@ -1361,12 +1358,11 @@ class ATPOutputView extends View
       instance.scrollToBottom()
 
     htmlStream = ansihtml()
-    htmlStream.on 'data', (data) =>
-      setTimeout ()->
-        dataCallback(data);
-      , 100
+    htmlStream.on 'data', dataCallback
     try
       @program = exec inputCmd, stdio: 'pipe', env: process.env, cwd: @getCwd()
+      console.log @program if atom.config.get('atom-terminal-panel.logConsole') or @specsMode
+      @program.cmd = cmd
       @program.stdout.pipe htmlStream
       @program.stderr.pipe htmlStream
 
@@ -1374,20 +1370,33 @@ class ATPOutputView extends View
       @statusIcon.removeClass 'status-error'
       @statusIcon.addClass 'status-running'
       @killBtn.removeClass 'hide'
-      @program.once 'exit', (code) =>
+      @program.on 'exit', (code, signal) =>
         console.log 'exit', code if atom.config.get('atom-terminal-panel.logConsole') or @specsMode
         @killBtn.addClass 'hide'
         @statusIcon.removeClass 'status-running'
-        # removeClass @statusIcon, 'status-error'
-        @program = null
-        @statusIcon.addClass code == 0 and 'status-success' or 'status-error'
+        if code == 0
+          @statusIcon.addClass 'status-success'
+        else
+          @statusIcon.addClass 'status-error'
+          if code == 127
+            @message (@consoleLabel 'error', 'Error')+(@consoleText 'error', @program.cmd + ': command not found')
+          else
+            @message (@consoleLabel 'error', 'Error')+(@consoleText 'error', 'Exit Code: ' + code)
+          @message '\n'
+        @putInputBox()
         @showCmd()
+        @program = null
         @spawnProcessActive = false
       @program.on 'error', (err) =>
         console.log 'error' if atom.config.get('atom-terminal-panel.logConsole') or @specsMode
-        @message(err.message)
+        @message (err.message)
+        @message '\n'
+        @putInputBox()
         @showCmd()
         @statusIcon.addClass 'status-error'
+      @program.on 'close', (code, signal) =>
+        @putInputBox()
+        @showCmd()
       @program.stdout.on 'data', =>
         @flashIconClass 'status-info'
         @statusIcon.removeClass 'status-error'
