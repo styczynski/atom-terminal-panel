@@ -731,7 +731,6 @@ class ATPOutputView extends View
 
   clear: ->
     @cliOutput.empty()
-    @message '\n'
     @putInputBox()
 
   setMaxWindowHeight: ->
