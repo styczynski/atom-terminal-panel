@@ -1063,7 +1063,6 @@ class ATPOutputView extends View
     if atom.config.get('atom-terminal-panel.useAtomIcons')
       classes.push 'name'
       classes.push 'icon'
-      classes.push 'icon-file-text'
       dataname = filepath
     else
       classes.push 'name'
