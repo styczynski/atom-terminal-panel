@@ -398,6 +398,8 @@ class ATPOutputView extends View
     CURRENT_LOCATION = @getCurrentFileLocation()
     if CURRENT_LOCATION?
       @cd [CURRENT_LOCATION]
+    else if atom.project.getDirectories()[0]?
+      @cd [atom.project.getDirectories()[0].path]
 
   getCurrentFileName: ()->
     current_file = @getCurrentFile()
@@ -688,10 +690,15 @@ class ATPOutputView extends View
       @helloMessageShown = true
     return this
 
+  clearStatusIcon: () ->
+    @statusIcon.removeClass()
+    @statusIcon.addClass('atp-panel icon icon-terminal')
+
   onCommand: (inputCmd) ->
     @fsSpy()
     @rawMessage @inputBoxState()
     @removeInputBox()
+    @clearStatusIcon()
 
     if not inputCmd?
       inputCmd = @readInputBox()
@@ -714,7 +721,7 @@ class ATPOutputView extends View
       @putInputBox()
       @showCmd()
 
-    if ret?
+    if typeof ret is 'string'
       @message ret + '\n'
 
     return null
@@ -819,7 +826,7 @@ class ATPOutputView extends View
       lastOpenedView.close()
     lastOpenedView = this
     @setMaxWindowHeight()
-    @putInputBox()
+    @putInputBox() if not @spawnProcessActive
     @scrollToBottom()
     @statusView.setActiveCommandView this
     @focusInputBox()
@@ -882,7 +889,8 @@ class ATPOutputView extends View
     return text.replace(/['"]+/g, '')
 
   cd: (args)->
-    args = [atom.project.path] if not args[0]
+    if not args[0]
+      return null
     args = @removeQuotes args
     dir = resolve @getCwd(), args[0]
     try
@@ -890,7 +898,6 @@ class ATPOutputView extends View
       if not stat.isDirectory()
         return @errorMessage "cd: not a directory: #{args[0]}"
       @cwd = dir
-      @putInputBox()
     catch e
       return @errorMessage "cd: #{args[0]}: No such file or directory"
     return null
@@ -1303,8 +1310,7 @@ class ATPOutputView extends View
 
   errorMessage: (message) ->
     @cliOutput.append @parseMessage(message)
-    @showCmd()
-    @statusIcon.removeClass 'status-success'
+    @clearStatusIcon()
     @statusIcon.addClass 'status-error'
     @parseSpecialNodes()
 
@@ -1314,11 +1320,11 @@ class ATPOutputView extends View
   getCwd: ->
     if not atom.project?
       return null
-    extFile = extname atom.project.path
+    extFile = extname atom.project.getPaths()[0]
 
     if extFile == ""
-      if atom.project.path
-        projectDir = atom.project.path
+      if atom.project.getPaths()[0]
+        projectDir = atom.project.getPaths()[0]
       else
         if process.env.HOME
           projectDir = process.env.HOME
@@ -1327,7 +1333,7 @@ class ATPOutputView extends View
         else
           projectDir = '/'
     else
-      projectDir = dirname atom.project.path
+      projectDir = dirname atom.project.getPaths()[0]
 
     cwd = @cwd or projectDir or @userHome
     return @correctFilePath cwd
@@ -1363,8 +1369,7 @@ class ATPOutputView extends View
       @program.stdout.pipe htmlStream
       @program.stderr.pipe htmlStream
 
-      @statusIcon.removeClass 'status-success'
-      @statusIcon.removeClass 'status-error'
+      @clearStatusIcon()
       @statusIcon.addClass 'status-running'
       @killBtn.removeClass 'hide'
       @program.on 'exit', (code, signal) =>
