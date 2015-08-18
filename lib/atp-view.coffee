@@ -1358,13 +1358,17 @@ class ATPOutputView extends View
       instance.message(data)
       instance.scrollToBottom()
 
+    processCallback = (error, stdout, stderr) ->
+      console.log 'callback' if atom.config.get('atom-terminal-panel.logConsole') or @specsMode
+      instance.putInputBox()
+      instance.showCmd()
+
     htmlStream = ansihtml()
     htmlStream.on 'data', dataCallback
     try
-      @program = exec inputCmd, stdio: 'pipe', env: process.env, cwd: @getCwd()
+      @program = exec inputCmd, stdio: 'pipe', env: process.env, cwd: @getCwd(), processCallback
       console.log @program if atom.config.get('atom-terminal-panel.logConsole') or @specsMode
       @program.stdout.pipe htmlStream
-      @program.stderr.pipe htmlStream
 
       @clearStatusIcon()
       @statusIcon.addClass 'status-running'
@@ -1380,14 +1384,8 @@ class ATPOutputView extends View
           if code == 127
             @message (@consoleLabel 'error', 'Error')+(@consoleText 'error', cmd + ': command not found')
             @message '\n'
-        @putInputBox()
-        @showCmd()
         @program = null
         @spawnProcessActive = false
-      @program.on 'close', (code, signal) =>
-        console.log 'close' if atom.config.get('atom-terminal-panel.logConsole') or @specsMode
-        @putInputBox()
-        @showCmd()
       @program.on 'error', (err) =>
         console.log 'error' if atom.config.get('atom-terminal-panel.logConsole') or @specsMode
         @message (err.message)
@@ -1395,11 +1393,12 @@ class ATPOutputView extends View
         @putInputBox()
         @showCmd()
         @statusIcon.addClass 'status-error'
-      @program.stdout.on 'data', =>
+      @program.stdout.on 'data', (data) =>
         @flashIconClass 'status-info'
         @statusIcon.removeClass 'status-error'
-      @program.stderr.on 'data', =>
+      @program.stderr.on 'data', (data) =>
         console.log 'stderr' if atom.config.get('atom-terminal-panel.logConsole') or @specsMode
+        @message data
         @flashIconClass 'status-error', 300
 
     catch err
