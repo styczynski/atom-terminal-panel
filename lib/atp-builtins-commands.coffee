@@ -48,7 +48,10 @@ module.exports =
   "cd":
     "params": "[directory]"
     "description": "Moves to the specified directory."
-    "command": (state, args)-> state.cd args
+    "command": (state, args)->
+      ret = state.cd args
+      if not ret?
+        state.statusIcon.addClass 'status-success'
   "new":
     "description": "Creates a new file and opens it in the editor view."
     "command": (state, args)->

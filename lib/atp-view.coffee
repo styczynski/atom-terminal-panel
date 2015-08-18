@@ -240,8 +240,15 @@ class ATPOutputView extends View
    	 @currentInputBoxCmp.input.focus()
     , 0
 
-    @currentInputBox.appendTo @cliOutput
-    @focusInputBox()
+    @cliOutput.append @currentInputBox
+
+  inputBoxState: () ->
+    inputState = @cliOutput.find('.atp-dynamic-input-box').clone()
+    inputState.find('.autocomplete-wrapper').replaceWith () ->
+      input = $(this).find('.autocomplete-input')[0]
+      return $('<span/>', class: input.className, text: input.value)
+    inputState.removeClass 'atp-dynamic-input-box'
+    return inputState.prop('outerHTML') + '\n'
 
   readInputBox: () ->
     ret = ''
@@ -391,6 +398,8 @@ class ATPOutputView extends View
     CURRENT_LOCATION = @getCurrentFileLocation()
     if CURRENT_LOCATION?
       @cd [CURRENT_LOCATION]
+    else if atom.project.getDirectories()[0]?
+      @cd [atom.project.getDirectories()[0].path]
 
   getCurrentFileName: ()->
     current_file = @getCurrentFile()
@@ -535,8 +544,8 @@ class ATPOutputView extends View
           cmd = @util.replaceAll '&lquot;', '\'', cmd
           @spawn cmdStr, cmd, args
           --@execStackCounter
-          if @execStackCounter==0
-            callback()
+          #if @execStackCounter==0
+          #  callback()
           if not cmd?
             return null
           return null
@@ -681,8 +690,15 @@ class ATPOutputView extends View
       @helloMessageShown = true
     return this
 
+  clearStatusIcon: () ->
+    @statusIcon.removeClass()
+    @statusIcon.addClass('atp-panel icon icon-terminal')
+
   onCommand: (inputCmd) ->
     @fsSpy()
+    @rawMessage @inputBoxState()
+    @removeInputBox()
+    @clearStatusIcon()
 
     if not inputCmd?
       inputCmd = @readInputBox()
@@ -702,20 +718,11 @@ class ATPOutputView extends View
       #@message "\n"+@getCommandPrompt(inputCmd)+" "+inputCmd+"\n", false
 
     ret = @exec inputCmd, null, this, () =>
-      setTimeout () =>
-        @putInputBox()
-      , 750
-    if ret?
-      @message ret + '\n'
-
-    @scrollToBottom()
-
-    # TODO: Should be removed.
-    @putInputBox()
-    setTimeout () =>
       @putInputBox()
-    , 750
-    # TODO: Repair this above, making input box less buggy!
+      @showCmd()
+
+    if typeof ret is 'string'
+      @message ret + '\n'
 
     return null
 
@@ -731,7 +738,6 @@ class ATPOutputView extends View
 
   clear: ->
     @cliOutput.empty()
-    @message '\n'
     @putInputBox()
 
   setMaxWindowHeight: ->
@@ -803,7 +809,6 @@ class ATPOutputView extends View
       @program.stdin.pause()
       @program.kill('SIGINT')
       @program.kill()
-      @message (@consoleLabel 'info', 'info')+(@consoleText 'info', 'Process has been stopped')
 
   maximize: ->
     @cliOutput.height (@cliOutput.height()+9999)
@@ -820,11 +825,11 @@ class ATPOutputView extends View
       lastOpenedView.close()
     lastOpenedView = this
     @setMaxWindowHeight()
+    @putInputBox() if not @spawnProcessActive
     @scrollToBottom()
     @statusView.setActiveCommandView this
     @focusInputBox()
     @showInitMessage()
-    @putInputBox()
 
     atom.tooltips.add @killBtn,
      title: 'Kill the long working process.'
@@ -883,7 +888,7 @@ class ATPOutputView extends View
     return text.replace(/['"]+/g, '')
 
   cd: (args)->
-    args = [atom.project.path] if not args[0]
+    args = [atom.project.getPaths()[0]] if not args[0]
     args = @removeQuotes args
     dir = resolve @getCwd(), args[0]
     try
@@ -891,7 +896,6 @@ class ATPOutputView extends View
       if not stat.isDirectory()
         return @errorMessage "cd: not a directory: #{args[0]}"
       @cwd = dir
-      @putInputBox()
     catch e
       return @errorMessage "cd: #{args[0]}: No such file or directory"
     return null
@@ -1063,7 +1067,6 @@ class ATPOutputView extends View
     if atom.config.get('atom-terminal-panel.useAtomIcons')
       classes.push 'name'
       classes.push 'icon'
-      classes.push 'icon-file-text'
       dataname = filepath
     else
       classes.push 'name'
@@ -1272,8 +1275,6 @@ class ATPOutputView extends View
 
     @cliOutput.append message
     @showCmd()
-    @statusIcon.removeClass 'status-error'
-    @statusIcon.addClass 'status-success'
     # @parseSpecialNodes()
 
   message: (message, matchSpec=true) ->
@@ -1301,16 +1302,13 @@ class ATPOutputView extends View
     # mes = @util.replaceAll '>', '&gt;', mes
     @cliOutput.append mes
     @showCmd()
-    @statusIcon.removeClass 'status-error'
-    @statusIcon.addClass 'status-success'
     @parseSpecialNodes()
     @scrollToBottom()
     # @putInputBox()
 
   errorMessage: (message) ->
     @cliOutput.append @parseMessage(message)
-    @showCmd()
-    @statusIcon.removeClass 'status-success'
+    @clearStatusIcon()
     @statusIcon.addClass 'status-error'
     @parseSpecialNodes()
 
@@ -1320,11 +1318,11 @@ class ATPOutputView extends View
   getCwd: ->
     if not atom.project?
       return null
-    extFile = extname atom.project.path
+    extFile = extname atom.project.getPaths()[0]
 
     if extFile == ""
-      if atom.project.path
-        projectDir = atom.project.path
+      if atom.project.getPaths()[0]
+        projectDir = atom.project.getPaths()[0]
       else
         if process.env.HOME
           projectDir = process.env.HOME
@@ -1333,7 +1331,7 @@ class ATPOutputView extends View
         else
           projectDir = '/'
     else
-      projectDir = dirname atom.project.path
+      projectDir = dirname atom.project.getPaths()[0]
 
     cwd = @cwd or projectDir or @userHome
     return @correctFilePath cwd
@@ -1360,41 +1358,50 @@ class ATPOutputView extends View
       instance.message(data)
       instance.scrollToBottom()
 
-    htmlStream = ansihtml()
-    htmlStream.on 'data', (data) =>
-      setTimeout ()->
-        dataCallback(data);
-      , 100
-    try
-      @program = exec inputCmd, stdio: 'pipe', env: process.env, cwd: @getCwd()
-      @program.stdout.pipe htmlStream
-      @program.stderr.pipe htmlStream
+    processCallback = (error, stdout, stderr) ->
+      console.log 'callback' if atom.config.get('atom-terminal-panel.logConsole') or @specsMode
+      instance.putInputBox()
+      instance.showCmd()
 
-      @statusIcon.removeClass 'status-success'
-      @statusIcon.removeClass 'status-error'
+    htmlStream = ansihtml()
+    htmlStream.on 'data', dataCallback
+    try
+      @program = exec inputCmd, stdio: 'pipe', env: process.env, cwd: @getCwd(), processCallback
+      console.log @program if atom.config.get('atom-terminal-panel.logConsole') or @specsMode
+      @program.stdout.pipe htmlStream
+
+      @clearStatusIcon()
       @statusIcon.addClass 'status-running'
       @killBtn.removeClass 'hide'
-      @program.once 'exit', (code) =>
-        console.log 'exit', code if atom.config.get('atom-terminal-panel.logConsole') or @specsMode
+      @program.on 'exit', (code, signal) =>
+        console.log 'exit', code, signal if atom.config.get('atom-terminal-panel.logConsole') or @specsMode
         @killBtn.addClass 'hide'
         @statusIcon.removeClass 'status-running'
-        # removeClass @statusIcon, 'status-error'
+        if code == 0
+          @statusIcon.addClass 'status-success'
+        else if code?
+          @statusIcon.addClass 'status-error'
+          if code == 127
+            @message (@consoleLabel 'error', 'Error')+(@consoleText 'error', cmd + ': command not found')
+            @message '\n'
         @program = null
-        @statusIcon.addClass code == 0 and 'status-success' or 'status-error'
-        @showCmd()
         @spawnProcessActive = false
       @program.on 'error', (err) =>
         console.log 'error' if atom.config.get('atom-terminal-panel.logConsole') or @specsMode
-        @message(err.message)
+        @message (err.message)
+        @message '\n'
+        @putInputBox()
         @showCmd()
         @statusIcon.addClass 'status-error'
-      @program.stdout.on 'data', =>
+      @program.stdout.on 'data', (data) =>
         @flashIconClass 'status-info'
         @statusIcon.removeClass 'status-error'
-      @program.stderr.on 'data', =>
+      @program.stderr.on 'data', (data) =>
         console.log 'stderr' if atom.config.get('atom-terminal-panel.logConsole') or @specsMode
+        @message data
         @flashIconClass 'status-error', 300
 
     catch err
+      console.log 'Failed to launch process' if atom.config.get('atom-terminal-panel.logConsole') or @specsMode
       @message (err.message)
       @showCmd()
