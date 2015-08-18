@@ -888,8 +888,7 @@ class ATPOutputView extends View
     return text.replace(/['"]+/g, '')
 
   cd: (args)->
-    if not args[0]
-      return null
+    args = [atom.project.getPaths()[0]] if not args[0]
     args = @removeQuotes args
     dir = resolve @getCwd(), args[0]
     try
@@ -1364,7 +1363,6 @@ class ATPOutputView extends View
     try
       @program = exec inputCmd, stdio: 'pipe', env: process.env, cwd: @getCwd()
       console.log @program if atom.config.get('atom-terminal-panel.logConsole') or @specsMode
-      @program.cmd = cmd
       @program.stdout.pipe htmlStream
       @program.stderr.pipe htmlStream
 
@@ -1380,7 +1378,7 @@ class ATPOutputView extends View
         else if code?
           @statusIcon.addClass 'status-error'
           if code == 127
-            @message (@consoleLabel 'error', 'Error')+(@consoleText 'error', @program.cmd + ': command not found')
+            @message (@consoleLabel 'error', 'Error')+(@consoleText 'error', cmd + ': command not found')
             @message '\n'
         @putInputBox()
         @showCmd()
