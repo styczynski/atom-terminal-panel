@@ -678,7 +678,7 @@ class ATPOutputView extends View
     if atom.config.get 'atom-terminal-panel.enableConsoleStartupInfo' or forceShow or (not @specsMode)
       changelog_path = require("path").join(__dirname, "../CHANGELOG.md");
       readme_path = require("path").join(__dirname, "../README.md");
-      hello_message = @consolePanel 'ATOM Terminal', 'Please enter new commands to the box below. (ctrl-to show suggestions dropdown)<br>The console supports special anotattion like: %(path), %(file), %(link)file.something%(endlink).<br>It also supports special HTML elements like: %(tooltip:A:content:B) and so on.<br>Hope you\'ll enjoy the terminal.'+
+      hello_message = @consolePanel 'ATOM Terminal', 'Please enter new commands to the box below. (ctrl-to show suggestions dropdown)<br>The console supports special annotation like: %(path), %(file), %(link)file.something%(endlink).<br>It also supports special HTML elements like: %(tooltip:A:content:B) and so on.<br>Hope you\'ll enjoy the terminal.'+
       "<br><a class='changelog-link' href='#{changelog_path}'>See changelog</a>&nbsp;&nbsp;<a class='readme-link' href='#{readme_path}'>and the README! :)</a>"
       @rawMessage hello_message
       $('.changelog-link').css('font-weight','300%').click(() =>
