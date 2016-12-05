@@ -824,6 +824,7 @@ class ATPOutputView extends View
     if lastOpenedView and lastOpenedView != this
       lastOpenedView.close()
     lastOpenedView = this
+    @statusIcon.addClass 'active'
     @setMaxWindowHeight()
     @putInputBox() if not @spawnProcessActive
     @scrollToBottom()
@@ -869,6 +870,7 @@ class ATPOutputView extends View
     else
       @detach()
       lastOpenedView = null
+    @statusIcon.removeClass 'active'
 
 
   toggle: ->
