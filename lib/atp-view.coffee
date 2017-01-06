@@ -40,7 +40,6 @@ class ATPOutputView extends View
   minHeight: 250
   util: include 'atp-terminal-util'
   currentInputBox: null
-  currentInputBox: null
   currentInputBoxTmr: null
   volatileSuggestions: []
   disposables:
