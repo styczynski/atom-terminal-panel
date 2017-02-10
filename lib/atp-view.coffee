@@ -1318,7 +1318,7 @@ class ATPOutputView extends View
   getCwd: ->
     if not atom.project?
       return null
-    extFile = extname atom.project.getPaths()[0]
+    extFile = extname atom.project.getPaths()[0] if typeof atom.project.getPaths()[0] is 'string'
 
     if extFile == ""
       if atom.project.getPaths()[0]
@@ -1331,7 +1331,7 @@ class ATPOutputView extends View
         else
           projectDir = '/'
     else
-      projectDir = dirname atom.project.getPaths()[0]
+      projectDir = dirname atom.project.getPaths()[0] if typeof atom.project.getPaths()[0] is 'string'
 
     cwd = @cwd or projectDir or @userHome
     return @correctFilePath cwd
