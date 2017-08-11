@@ -3,10 +3,10 @@
 ![Shields.io badge](https://img.shields.io/apm/dm/atom-terminal-panel.svg?style=flat-square)
 ![Shields.io badge](https://img.shields.io/apm/l/atom-terminal-panel.svg?style=flat-square)
 
-atom-terminal-panel
+Terminalix 
 ==============
 
-(a fork of super-awesome atom package - thedaniel/terminal-panel)
+(a fork of super-awesome atom package styczynski/atom-terminal-panel forked from thedaniel/terminal-panel)
 Plugin for ATOM Editor.
 
 ## Short note
