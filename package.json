@@ -1,7 +1,7 @@
 {
   "name": "terminalix",
   "main": "./lib/atp",
-  "version": "0.2.0",
+  "version": "4.4.4",
   "description": "An advanced ATOM terminal interface. Fork of super-awesome atom package styczynski/atom-terminal-panel forked from thedaniel/terminal-panel",
   "keywords": [
     "plugin",
