@@ -127,6 +127,11 @@ module.exports =
       description: 'Replacement for the current working directory path at the console output.'
       type: 'string'
       default: '[CWD]'
+    'textEncode':
+      title: 'Encoding for console'
+      description: 'Encoding at the console output, e.g. 866 for russian'
+      type: 'string'
+      default: 'utf8'
     'textReplacementCurrentFile':
       title: 'Currently edited file replacement'
       description: 'Replacement for the currently edited file at the console output.'
