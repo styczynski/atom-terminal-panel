@@ -1,22 +1,9 @@
 {
-  "name": "terminalix",
+  "name": "atom-terminal-panel",
   "main": "./lib/atp",
-  "version": "4.5.0",
-  "description": "An advanced ATOM terminal interface. Fork of super-awesome atom package styczynski/atom-terminal-panel forked from thedaniel/terminal-panel",
-  "keywords": [
-    "plugin",
-    "atom-terminal",
-    "atom-package",
-    "atom-editor",
-    "fancy",
-    "atom-command",
-    "coffeescript",
-    "terminal"
-  ],
-  "activationCommands": {
-    "atom-workspace": "terminalix:toggle"
-  },
-  "repository": "https://github.com/VadimDor/terminalix",
+  "version": "4.4.4",
+  "description": "An advanced ATOM terminal interface. Fork of awesome atom package - terminal-panel",
+  "repository": "https://github.com/isis97/atom-terminal-panel",
   "license": "MIT",
   "engines": {
     "atom": ">0.135.0"

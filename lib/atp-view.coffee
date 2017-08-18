@@ -30,7 +30,6 @@ include 'jquery-autocomplete-js'
 module.exports =
 class ATPOutputView extends View
   cwd: null
-  #streamsEncoding: 'iso-8859-3'
   streamsEncoding : '"'+atom.config.get('atom-terminal-panel.textEncode')+'"'
   _cmdintdel: 50
   echoOn: true
