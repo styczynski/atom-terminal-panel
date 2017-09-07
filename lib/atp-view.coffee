@@ -1039,11 +1039,11 @@ class ATPOutputView extends View
 
     str = filename
     name_tokens = filename
-    filename = filename.replace /:[0-9]+:[0-9]/ig, ''
+    filename = filename.replace /:[0-9]+:[0-9]+/ig, ''
     name_tokens = @util.replaceAll filename, '', name_tokens
     name_tokens = name_tokens.split ':'
-    fileline = name_tokens[0]
-    filecolumn = name_tokens[1]
+    fileline = name_tokens[1]-1
+    filecolumn = name_tokens[2]-1
 
     filename = @util.replaceAll '/', '\\', filename
     filename = @util.replaceAll parent, '', filename
