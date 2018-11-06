@@ -30,7 +30,7 @@ include 'jquery-autocomplete-js'
 module.exports =
 class ATPOutputView extends View
   cwd: null
-  streamsEncoding: 'iso-8859-3'
+  streamsEncoding : '"'+atom.config.get('atom-terminal-panel.textEncode')+'"'
   _cmdintdel: 50
   echoOn: true
   redirectOutput: ''
@@ -290,7 +290,7 @@ class ATPOutputView extends View
     $('body').append(el)
     ###
 
-
+    @streamsEncoding = '"'+atom.config.get('atom-terminal-panel.textEncode')+'"'
     lastY = -1
     mouseDown = false
     panelDraggingActive = false
@@ -1364,11 +1364,13 @@ class ATPOutputView extends View
       instance.showCmd()
 
     htmlStream = ansihtml()
+    htmlStream = iconv.decodeStream  @streamsEncoding
     htmlStream.on 'data', dataCallback
     try
       @program = exec inputCmd, stdio: 'pipe', env: process.env, cwd: @getCwd(), processCallback
       console.log @program if atom.config.get('atom-terminal-panel.logConsole') or @specsMode
-      @program.stdout.pipe htmlStream
+      @program.stdout.setEncoding 'base64'
+      (@program.stdout.pipe iconv.encodeStream 'base64').pipe htmlStream
 
       @clearStatusIcon()
       @statusIcon.addClass 'status-running'
