@@ -338,6 +338,21 @@ class ATPOutputView extends View
               @open()
               @onCommand action[1]
             atom.commands.add 'atom-workspace', obj
+            
+    # add actions for local commands if specified
+    # command body should have key "action": action_name
+    # then keymap can have key-combo: atom-terminal-panel:action_name
+    for cmd_name, cmd_body of @localCommands
+      action = cmd_body.action
+      if action?
+        obj = {}
+        obj['atom-terminal-panel:'+action] = (() =>
+          cmd_name2 = cmd_name  # inner scoped variable
+          return () =>
+            @open()
+            @onCommand cmd_name2
+        )()
+        atom.commands.add 'atom-workspace', obj
 
     if atom.workspace?
       eleqr = atom.workspace.getActivePaneItem() ? atom.workspace
