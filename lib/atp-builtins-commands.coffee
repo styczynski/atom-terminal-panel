@@ -7,6 +7,7 @@
 ###
 
 core = include 'atp-core'
+fs = include 'fs'
 
 module.exports =
   "encode":
@@ -56,17 +57,17 @@ module.exports =
     "description": "Creates a new file and opens it in the editor view."
     "command": (state, args)->
       if args == null || args == undefined
-        atom.workspaceView.trigger 'application:new-file'
+        atom.commands.dispatch(atom.views.getView(atom.workspace), 'application:new-file')
         return null
       file_name = state.util.replaceAll '\"', '', args[0]
       if file_name == null || file_name == undefined
-        atom.workspaceView.trigger 'application:new-file'
+        atom.commands.dispatch(atom.views.getView(atom.workspace), 'application:new-file')
         return null
       else
         file_path = state.resolvePath file_name
         fs.closeSync(fs.openSync(file_path, 'w'))
         state.delay () ->
-          atom.workspaceView.open file_path
+          atom.workspace.open file_path
         return state.consoleLink file_path
   "rm":
     "params": "[file]"
@@ -101,7 +102,7 @@ module.exports =
     "command": (state, args)->
       file_name = state.resolvePath args[0]
       state.delay () ->
-        atom.workspaceView.open (file_name)
+        atom.workspace.open (file_name)
       return state.consoleLink file_name
   "link":
     "params": "[file/directory]"
